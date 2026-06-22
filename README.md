@@ -6,8 +6,6 @@ A single-file browser tool for designing **counter-rotating coaxial disc sculptu
 
 Built for designing laser-cut acrylic discs that mount on a shared axis and spin in opposite directions. The overlapping patterns produce a travelling moire interference figure that changes continuously as the discs rotate.
 
-![Coaxial Interference Studio](https://raw.githubusercontent.com/knnurl/coaxial-interference-studio/main/preview.png)
-
 ---
 
 ## Features
@@ -47,14 +45,14 @@ Built for designing laser-cut acrylic discs that mount on a shared axis and spin
 No build step, no dependencies, no server.
 
 ```
-open coaxial_interference.html
+open index.html
 ```
 
 Or serve locally if your browser restricts local file access:
 
 ```bash
 python3 -m http.server 8080
-# then open http://localhost:8080/coaxial_interference.html
+# then open http://localhost:8080/index.html
 ```
 
 ---
@@ -74,7 +72,7 @@ python3 -m http.server 8080
 ## File structure
 
 ```
-coaxial_interference.html        single self-contained file, no external dependencies at runtime
+index.html        single self-contained file, no external dependencies at runtime
 .github/
   workflows/
     pages.yml                    deploys to GitHub Pages on every push to main
