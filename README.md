@@ -2,7 +2,7 @@
 
 A single-file browser tool for designing **counter-rotating coaxial disc sculptures** with live moire preview and laser/waterjet-ready export.
 
-**[Open the studio](https://kaanaksit.github.io/coaxial-interference-studio/coaxial_interference.html)**
+**[Open the studio](https://kaanaksit.github.io/coaxial-interference-studio/index.html)**
 
 Built for designing laser-cut acrylic discs that mount on a shared axis and spin in opposite directions. The overlapping patterns produce a travelling moire interference figure that changes continuously as the discs rotate.
 
