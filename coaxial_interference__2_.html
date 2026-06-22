@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coaxial Interference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --dark:#141413; --light:#faf9f5; --mid:#b0aea5; --lgray:#e8e6dc;
+  --orange:#d97757; --blue:#6a9bcc; --green:#788c5d; --panel:#ffffff;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:'Poppins',sans-serif; color:var(--dark);
+  background:linear-gradient(135deg,var(--light) 0%,#f3f1ea 100%);
+  display:flex; flex-direction:column; overflow:hidden;
+}
+header{
+  display:flex; align-items:center; gap:18px; padding:10px 18px;
+  border-bottom:1px solid var(--lgray); background:rgba(255,255,255,.6);
+  backdrop-filter:blur(6px); flex-wrap:wrap;
+}
+header .brand{font-family:'Lora',serif; font-size:20px; font-style:italic; letter-spacing:.2px}
+header .brand small{font-family:'Poppins'; font-style:normal; font-size:11px; color:var(--mid); display:block; letter-spacing:.5px}
+.topgroup{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+.topgroup .lab{font-size:11px; color:var(--mid); text-transform:uppercase; letter-spacing:.6px}
+button,select,input[type=number]{font-family:'Poppins'; font-size:12.5px; color:var(--dark)}
+.btn{
+  border:1px solid var(--lgray); background:#fff; padding:7px 12px; border-radius:9px;
+  cursor:pointer; transition:.15s; font-weight:500;
+}
+.btn:hover{border-color:var(--mid); transform:translateY(-1px)}
+.btn.primary{background:var(--dark); color:var(--light); border-color:var(--dark)}
+.btn.accent{background:var(--orange); color:#fff; border-color:var(--orange)}
+.btn.toggle.on{background:var(--green); color:#fff; border-color:var(--green)}
+select{border:1px solid var(--lgray); background:#fff; padding:6px 8px; border-radius:8px; cursor:pointer}
+input[type=number]{border:1px solid var(--lgray); border-radius:8px; padding:6px 7px; width:72px}
+.main{flex:1; display:flex; min-height:0}
+.sidebar{
+  width:330px; padding:14px; overflow-y:auto; background:#e7e3d7;
+  border-right:1px solid var(--lgray);
+}
+.sidebar::-webkit-scrollbar{width:8px} .sidebar::-webkit-scrollbar-thumb{background:#cfccc0; border-radius:4px}
+.stage{flex:1; display:flex; align-items:center; justify-content:center; padding:18px; position:relative}
+#wrap{position:relative; box-shadow:0 18px 50px rgba(20,20,19,.16); border-radius:14px; overflow:hidden}
+canvas{display:block; border-radius:14px}
+.panel{background:var(--panel); border:1px solid #dcd9cd; border-radius:12px; margin-bottom:12px; overflow:hidden; box-shadow:0 1px 3px rgba(20,20,19,.06)}
+.panel>h3{
+  font-size:12px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:var(--dark);
+  padding:11px 13px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none;
+}
+.panel>h3 .chip{font-size:10px; color:var(--mid); font-weight:500; text-transform:none; letter-spacing:0}
+.panel .body{padding:6px 13px 13px}
+.panel.collapsed .body{display:none}
+.ctl{margin:11px 0}
+.ctl label{display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px; color:#3a3a36}
+.ctl label .v{color:var(--orange); font-weight:600; font-variant-numeric:tabular-nums}
+.ctl input[type=range]{
+  -webkit-appearance:none; width:100%; height:4px; border-radius:3px;
+  background:var(--lgray); outline:none;
+}
+.ctl input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none; width:15px; height:15px; border-radius:50%;
+  background:var(--dark); cursor:pointer; border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.2);
+}
+.ctl input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--dark);cursor:pointer;border:2px solid #fff}
+.ctl.sel select{width:100%}
+.ctl.color{display:flex; align-items:center; justify-content:space-between}
+.ctl.color input[type=color]{width:42px; height:26px; border:1px solid var(--lgray); border-radius:6px; background:none; cursor:pointer; padding:0}
+.row{display:flex; gap:8px; flex-wrap:wrap}
+.row .btn{flex:1; text-align:center; padding:7px 6px}
+.note{font-size:11px; color:var(--mid); line-height:1.5; margin-top:4px}
+.warn{font-size:11px; color:var(--orange); line-height:1.5; margin-top:6px; display:none}
+.warn.show{display:block}
+.seedline{display:flex; gap:6px; align-items:center}
+.seedline input{flex:1}
+.hidden{display:none !important}
+.foot{font-size:11px; color:var(--mid); padding:6px 2px 0}
+.statusbar{position:absolute; left:18px; bottom:14px; font-size:11px; color:var(--mid); background:rgba(255,255,255,.7); padding:6px 10px; border-radius:8px; font-variant-numeric:tabular-nums}
+.ctl-head{display:flex; align-items:center; gap:6px; margin-bottom:7px}
+.ctl-head .nm{font-size:12px; color:#3a3a36; flex:1}
+.numin{width:62px; border:1px solid var(--lgray); border-radius:7px; padding:4px 6px; font-size:12px; color:var(--orange); font-weight:600; font-variant-numeric:tabular-nums; text-align:right}
+.numin:focus{outline:none; border-color:var(--orange)}
+.unit{font-size:10px; color:var(--mid); min-width:22px}
+.lockbtn{display:flex; align-items:center; justify-content:center; width:25px; height:25px; border:1px solid var(--lgray); border-radius:7px; background:#fff; cursor:pointer; color:#cbc9be; padding:0; flex:none}
+.lockbtn.on{color:var(--orange); border-color:var(--orange); background:#fbeee8}
+.panel>h3>.ttl{flex:1}
+.eye{border:1px solid var(--lgray); background:#fff; border-radius:7px; padding:3px 9px; margin-right:9px; font-size:11px; cursor:pointer; color:var(--green); font-weight:500}
+.eye.off{color:var(--mid)}
+.ctl input[type=range]::-moz-range-progress{background:#e7a98f; height:4px; border-radius:3px}
+/* help button + tutorial */
+.help{border:1px solid var(--lgray); background:#fff; width:30px; height:30px; border-radius:50%; cursor:pointer; font-family:'Lora',serif; font-style:italic; font-size:15px; color:var(--orange); font-weight:600; transition:.15s; flex:none}
+.help:hover{border-color:var(--orange); transform:translateY(-1px)}
+.tut-overlay{position:fixed; inset:0; display:none; z-index:50}
+.tut-overlay.show{display:block}
+.tut-spotlight{position:fixed; left:0; top:0; width:0; height:0; border-radius:11px; box-shadow:0 0 0 9999px rgba(20,20,19,.55); border:2px solid rgba(217,119,87,.95); pointer-events:none; z-index:51; display:none; transition:left .28s cubic-bezier(.4,0,.2,1), top .28s cubic-bezier(.4,0,.2,1), width .28s cubic-bezier(.4,0,.2,1), height .28s cubic-bezier(.4,0,.2,1)}
+.tut{position:fixed; left:50%; top:50%; z-index:52; background:var(--panel); width:min(440px,92vw); border:1px solid var(--lgray); border-radius:18px; box-shadow:0 30px 80px rgba(20,20,19,.4); overflow:hidden; transition:left .28s cubic-bezier(.4,0,.2,1), top .28s cubic-bezier(.4,0,.2,1)}
+@keyframes tutpop{from{opacity:0; transform:translateY(8px) scale(.98)} to{opacity:1; transform:none}}
+.tut-top{padding:20px 22px 6px}
+.tut-kicker{font-size:11px; letter-spacing:.7px; text-transform:uppercase; color:var(--mid)}
+.tut-h{font-family:'Lora',serif; font-style:italic; font-size:21px; margin:3px 0 10px}
+.tut-body{font-size:13px; line-height:1.6; color:#3a3a36; min-height:104px}
+.tut-body b{color:var(--dark); font-weight:600}
+.tut-body .accent{color:var(--orange); font-weight:600}
+.tut-dots{display:flex; gap:6px; padding:4px 22px 0}
+.tut-dots span{width:7px; height:7px; border-radius:50%; background:var(--lgray); transition:.15s; cursor:pointer}
+.tut-dots span.on{background:var(--orange); transform:scale(1.15)}
+.tut-foot{display:flex; align-items:center; gap:8px; padding:16px 22px 20px}
+.tut-foot .skip{margin-right:auto; background:none; border:none; color:var(--mid); cursor:pointer; font-size:12px; font-family:'Poppins'}
+.tut-foot .skip:hover{color:var(--dark)}
+/* ---------- mobile / narrow screens ---------- */
+/* portrait phones: stack the controls below the disc */
+@media (max-width:820px) and (orientation:portrait){
+  html,body{height:auto}
+  body{overflow-x:hidden; overflow-y:auto}
+  .main{flex-direction:column; flex:0 0 auto; min-height:0}
+  .stage{order:0; flex:0 0 auto; width:100%; flex-direction:column; padding:12px 12px 6px}
+  #wrap{max-width:100%}
+  .sidebar{order:1; width:100%; max-height:none; overflow:visible; border-right:none; border-top:1px solid var(--lgray)}
+  .statusbar{position:static; left:auto; bottom:auto; margin:8px auto 2px; display:inline-block; text-align:center}
+}
+/* landscape phones: keep the controls on the LEFT of the disc, just slimmer */
+@media (max-width:820px) and (orientation:landscape){
+  .sidebar{width:50%; max-width:560px}
+  .stage{padding:6px}
+  header{padding:4px 10px}
+  header .brand{font-size:14px}
+}
+/* any small screen: tighter header + tutorial becomes a bottom sheet */
+@media (max-width:820px){
+  header{padding:6px 12px; gap:8px 12px; flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch}
+  header::-webkit-scrollbar{height:0}
+  header .brand{font-size:15px; white-space:nowrap; flex:none}
+  header .brand small{display:none}
+  .topgroup{gap:6px; flex:none}
+  .topgroup .lab{display:none}
+  header .btn{padding:6px 9px}
+  header.hxR{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 26px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 26px),transparent)}
+  header.hxL{-webkit-mask-image:linear-gradient(to right,transparent,#000 26px);mask-image:linear-gradient(to right,transparent,#000 26px)}
+  header.hxLR{-webkit-mask-image:linear-gradient(to right,transparent,#000 26px,#000 calc(100% - 26px),transparent);mask-image:linear-gradient(to right,transparent,#000 26px,#000 calc(100% - 26px),transparent)}
+  .setup-dock{display:flex; gap:6px; align-items:center; flex-wrap:wrap; padding:2px 0 12px; margin-bottom:4px; border-bottom:1px solid var(--lgray)}
+  .setup-dock .lab{display:inline; font-size:11px; color:var(--mid); text-transform:uppercase; letter-spacing:.6px}
+  .tut-overlay.show{background:rgba(20,20,19,.5)}
+  .tut.sheet{left:10px; right:10px; top:auto; bottom:10px; width:auto; max-height:64vh; overflow-y:auto}
+  .tut.sheet .tut-body{min-height:0}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">Coaxial Interference<small>COUNTER-ROTATING MOIRE STUDIO</small></div>
+  <div class="topgroup">
+    <button id="playBtn" class="btn primary">Pause</button>
+    <span class="lab">Preset</span>
+    <select id="preset">
+      <option value="zen">Zen Pulse</option>
+      <option value="bloom">Moire Bloom</option>
+      <option value="stargate">Stargate</option>
+      <option value="lace">Lace Web</option>
+      <option value="shimmer">Shimmer</option>
+    </select>
+  </div>
+  <div class="topgroup">
+    <span class="lab">Seed</span>
+    <input type="number" id="seed" value="7" min="0" step="1">
+    <button id="randBtn" class="btn">Randomize</button>
+    <button id="undoRand" class="btn">Undo</button>
+  </div>
+  <div class="topgroup">
+    <span class="lab">Setup</span>
+    <button id="saveSetup" class="btn">Save</button>
+    <button id="loadSetup" class="btn">Load</button>
+    <button id="resetSetup" class="btn">Reset</button>
+    <input type="file" id="setupFile" accept=".json,application/json" style="display:none">
+  </div>
+  <button id="helpBtn" class="help" title="How to use this studio" style="margin-left:auto">?</button>
+</header>
+
+<div class="main">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="stage">
+    <div id="wrap"><canvas id="cv"></canvas></div>
+    <div class="statusbar" id="status"></div>
+  </div>
+</div>
+
+<div class="tut-overlay" id="tutOverlay">
+  <div class="tut-spotlight" id="tutSpot"></div>
+  <div class="tut">
+    <div class="tut-top">
+      <div class="tut-kicker" id="tutKicker">Quick start &middot; 1 of 4</div>
+      <div class="tut-h" id="tutTitle"></div>
+      <div class="tut-body" id="tutBody"></div>
+    </div>
+    <div class="tut-dots" id="tutDots"></div>
+    <div class="tut-foot">
+      <button class="skip" id="tutSkip">Skip</button>
+      <button class="btn" id="tutBack">Back</button>
+      <button class="btn primary" id="tutNext">Next</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+// ---------- tutorial ----------
+const TUT_STEPS=[
+  {t:'Start with a preset',
+   tgt:['#playBtn','#preset','#randBtn'],
+   h:'This studio overlaps <b>two patterned discs</b> spinning opposite ways; where their lines cross, a <span class="accent">moir&eacute;</span> blooms.<br><br>The fastest way in is the <b>Preset</b> menu (highlighted) &mdash; jump between <span class="accent">Moir&eacute; Bloom</span>, Zen Pulse, Stargate, Lace Web and Shimmer to see the range. <b>Pause / Play</b> freezes a frame.<br><br>Want fresh ideas? Hit <b>Randomize</b> &mdash; <b>Seed</b> sets the dice, <b>Undo</b> steps back, and the lock by any slider pins it while the rest shuffles.'},
+  {t:'Shape the motion',
+   tgt:['#pnl-form-motion'],
+   h:'In <b>Form &amp; motion</b> you set the physical disc: <b>Diameter</b>, <b>Hub mask</b>, the <b>Disc A speed</b> (&minus;15 to +15 rpm, so it can spin backwards) and the <b>B / A ratio</b>.<br><br><b>Calm &harr; Intense</b> scales pattern density on both discs at once. Watch the spacing readout at the bottom of the stage.'},
+  {t:'Pick the pattern',
+   tgt:['#pnl-disc-a'],
+   h:'<b>Disc A</b> is the pattern engine. Pick a base shape: <span class="accent">Superformula rings</span>, <b>Harmonic grating</b>, <b>Spiral</b>, <b>Maurer rose</b> or <b>Phyllotaxis</b>, then tune its own sliders. Type a value, drag, or tap the lock to pin it while you randomize.<br><br><b>Disc B</b> sits just below. Leave it <b>linked</b> to mirror Disc A with a small <b>Detune</b> for travelling moir&eacute;, or make it <b>independent</b> for a different pattern. Turn on <b>Mirror disc B</b> to reflect it across the horizontal, vertical, or point axis &mdash; this creates a <span class="accent">kaleidoscope effect</span> as the two discs counter-rotate. The <b>shown / hidden</b> button on each tab isolates one disc.'},
+  {t:'Repeat into segments',
+   tgt:['#pnl-repeat-segments'],
+   h:'<b>Repeat &amp; segments</b> (below Disc B) clips the pattern into a wedge and stamps it around the disc.<br><br>Set a <b>Segment angle</b> and the number of <b>Pieces around disc</b> &mdash; e.g. <span class="accent">90&deg; &times; 2</span> gives two opposing quarter-segments. Turn on <b>Mirror</b> for a kaleidoscope.'},
+  {t:'Make it real, then export',
+   tgt:['#pnl-export'],
+   h:'You are previewing the <span class="accent">manufactured part</span>. The <b>Fabrication</b> and <b>Tabs</b> panels turn the art into a real cut plate and weld loose rings together.<br><br>When you are ready, open the <b>Export</b> panel (highlighted) for per-disc <b>SVG / DXF</b>, the combined <b>Composite SVG</b>, or a <b>PNG</b> snapshot. <b>Save</b> / <b>Load</b> in the top bar stores every setting as JSON. Reopen this guide anytime with <b>?</b>.'}
+];
+let tutI=0;
+const tutOverlay=document.getElementById('tutOverlay');
+const tutSpot=document.getElementById('tutSpot');
+const tutCard=document.querySelector('.tut');
+const tutDots=document.getElementById('tutDots');
+TUT_STEPS.forEach((_,i)=>{ const d=document.createElement('span'); d.onclick=()=>{tutI=i; tutPaint();}; tutDots.appendChild(d); });
+function tutUnionRect(sels){
+  let r=null;
+  for(const s of sels||[]){ const el=document.querySelector(s); if(!el) continue;
+    const b=el.getBoundingClientRect(); if(b.width===0&&b.height===0) continue;
+    if(!r) r={l:b.left,t:b.top,rt:b.right,bt:b.bottom};
+    else { r.l=Math.min(r.l,b.left); r.t=Math.min(r.t,b.top); r.rt=Math.max(r.rt,b.right); r.bt=Math.max(r.bt,b.bottom); }
+  }
+  return r;
+}
+function tutIsMobile(){ return innerWidth<=820; }
+function tutPlaceCard(rect){
+  if(tutIsMobile()){ tutCard.classList.add('sheet'); tutCard.style.left=''; tutCard.style.top=''; tutCard.style.width=''; tutCard.style.transform='none'; return; }
+  tutCard.classList.remove('sheet');
+  const cw=tutCard.offsetWidth, ch=tutCard.offsetHeight, vw=innerWidth, vh=innerHeight, m=16;
+  let left, top;
+  if(!rect){ left=(vw-cw)/2; top=(vh-ch)/2; }
+  else if(vw-rect.rt >= cw+2*m){ left=rect.rt+m; top=rect.t; }        // to the right of target
+  else if(vh-rect.bt >= ch+2*m){ top=rect.bt+m; left=rect.l; }        // below target
+  else if(rect.t >= ch+2*m){ top=rect.t-ch-m; left=rect.l; }          // above target
+  else { left=(vw-cw)/2; top=(vh-ch)/2; }
+  left=Math.max(m, Math.min(vw-cw-m, left));
+  top=Math.max(m, Math.min(vh-ch-m, top));
+  tutCard.style.left=left+'px'; tutCard.style.top=top+'px'; tutCard.style.transform='none';
+}
+function tutSpotlight(sels){
+  if(tutIsMobile()){
+    // stacked layout: scroll the referenced control to the top so the bottom-sheet card doesn't cover it
+    if(sels&&sels.length){ const f=document.querySelector(sels[0]); if(f&&f.scrollIntoView) f.scrollIntoView({block:'start',behavior:'smooth'}); }
+    tutSpot.style.display='none'; tutPlaceCard(null); return;
+  }
+  if(sels&&sels.length){ const f=document.querySelector(sels[0]); if(f&&f.scrollIntoView) f.scrollIntoView({block:'nearest'}); } // instant: spotlight measures right after
+  const r=tutUnionRect(sels), pad=8;
+  if(!r){ tutSpot.style.display='none'; tutPlaceCard(null); return; }
+  tutSpot.style.display='block';
+  tutSpot.style.left=(r.l-pad)+'px'; tutSpot.style.top=(r.t-pad)+'px';
+  tutSpot.style.width=(r.rt-r.l+2*pad)+'px'; tutSpot.style.height=(r.bt-r.t+2*pad)+'px';
+  tutPlaceCard({l:r.l-pad,t:r.t-pad,rt:r.rt+pad,bt:r.bt+pad});
+}
+function tutPaint(){
+  const s=TUT_STEPS[tutI];
+  document.getElementById('tutKicker').textContent='Quick start \u00b7 '+(tutI+1)+' of '+TUT_STEPS.length;
+  document.getElementById('tutTitle').textContent=s.t;
+  document.getElementById('tutBody').innerHTML=s.h;
+  Array.from(tutDots.children).forEach((d,i)=>d.classList.toggle('on',i===tutI));
+  document.getElementById('tutBack').style.visibility=tutI===0?'hidden':'visible';
+  document.getElementById('tutNext').textContent=tutI===TUT_STEPS.length-1?'Start':'Next';
+  tutSpotlight(s.tgt);
+}
+function tutOpen(){ tutOverlay.classList.add('show'); tutI=0; tutPaint(); }
+function tutClose(){ tutOverlay.classList.remove('show'); }
+document.getElementById('helpBtn').onclick=tutOpen;
+document.getElementById('tutSkip').onclick=tutClose;
+document.getElementById('tutBack').onclick=()=>{ if(tutI>0){tutI--; tutPaint();} };
+document.getElementById('tutNext').onclick=()=>{ if(tutI<TUT_STEPS.length-1){tutI++; tutPaint();} else tutClose(); };
+tutOverlay.onclick=(e)=>{ if(e.target===tutOverlay) tutClose(); };
+window.addEventListener('keydown',(e)=>{ if(tutOverlay.classList.contains('show')&&e.key==='Escape') tutClose(); });
+window.addEventListener('resize',()=>{ if(tutOverlay.classList.contains('show')) tutPaint(); });
+
+// ---------- seeded rng (mulberry32) ----------
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+// ---------- parameter state ----------
+const P = {
+  g:{
+    diameter:400, hub:40, lineWeight:0.85, opacity:1.0,
+    rpm:2.0, ratio:1.0, drift:false, counter:true,
+    blend:'multiply', bg:'#faf6ec', colA:'#1f6f6b', colB:'#d97757',
+    intensity:1.0, detune:1, link:true, envelope:0.98, trail:0.0,
+    showA:true, showB:true, bore:8,
+    mirrorB:false, mirrorAxis:'h',
+    wedge:false, wedgeDeg:90, wedgeCount:2, wedgeOffset:0, wedgeMirror:false,
+    machine:true, mfgView:true, invert:true, discOpaque:false, material:'acrylic', kerf:0.15,
+    featW:2, minWeb:1.5, role:'slot', hubSolid:16, onePiece:true, dropPreview:false,
+    tabs:0, tabW:4, tabShape:'rounded', tabCurve:30, tabSweep:0, tabOffset:0, tabStagger:0, tabRing:true, tabHub:true, tabRim:false,
+    rimOuter:false, rimOuterW:4, rimInner:false, rimInnerW:4, rimMid:0, rimMidW:3
+  },
+  A:{ prim:'superformula',
+    hN:7, hWaves:2, hAmp:14,
+    sfRings:9, sfM:6, sfN1:1.0, sfN2:1.4, sfN3:1.4, sfDeform:0.55, sfTwist:4,
+    mK:5, mD:29, mPts:540, mScale:1,
+    spArms:3, spB:6, spType:'arch', spHand:1,
+    phCount:600, phAngle:137.507, phDot:1.0, phDash:true
+  },
+  B:{ prim:'superformula',
+    hN:7, hWaves:2, hAmp:14,
+    sfRings:9, sfM:6, sfN1:1.0, sfN2:1.4, sfN3:1.4, sfDeform:0.55, sfTwist:-4,
+    mK:5, mD:29, mPts:540, mScale:1,
+    spArms:3, spB:6, spType:'arch', spHand:-1,
+    phCount:600, phAngle:137.507, phDot:1.0, phDash:true
+  }
+};
+const DEFAULTS = JSON.parse(JSON.stringify(P));
+let flashT = 0;
+let randUndo = null;
+
+// ---------- geometry primitives (disc frame, mm, centred at 0) ----------
+// each returns array of polylines; each polyline = array of [x,y]
+
+function genHarmonic(d, hub, R, intensity){
+  const N=Math.max(2,Math.round(d.hN*intensity));
+  const waves=d.hWaves, amp=d.hAmp*Math.PI/180;
+  const S=140, out=[];
+  for(let k=0;k<N;k++){
+    const base=2*Math.PI*k/N, p=[];
+    for(let i=0;i<=S;i++){
+      const t=i/S, r=hub+(R-hub)*t;
+      const ang=base+amp*Math.sin(waves*2*Math.PI*t);
+      p.push([r*Math.cos(ang), r*Math.sin(ang)]);
+    }
+    out.push(p);
+  }
+  return out;
+}
+
+function superR(phi,m,n1,n2,n3){
+  const t1=Math.pow(Math.abs(Math.cos(m*phi/4)),n2);
+  const t2=Math.pow(Math.abs(Math.sin(m*phi/4)),n3);
+  const s=t1+t2;
+  if(s<1e-6) return 1;
+  return Math.pow(s,-1/n1);
+}
+function genSuperformula(d, hub, R, intensity){
+  const rings=Math.max(1,Math.round(d.sfRings*intensity));
+  const m=Math.max(0,Math.round(d.sfM));
+  const n1=d.sfN1,n2=d.sfN2,n3=d.sfN3,def=d.sfDeform,twist=d.sfTwist*Math.PI/180;
+  const S=240, out=[];
+  // normalise sf to peak 1
+  let rmax=1e-9;
+  for(let i=0;i<S;i++){const phi=2*Math.PI*i/S; rmax=Math.max(rmax,superR(phi,m,n1,n2,n3));}
+  for(let j=0;j<rings;j++){
+    const rho=hub+(R-hub)*(j+1)/rings;
+    const rot=twist*j, p=[];
+    for(let i=0;i<=S;i++){
+      const phi=2*Math.PI*i/S;
+      const sf=superR(phi,m,n1,n2,n3)/rmax;
+      const rr=rho*(1+def*(sf-1));
+      const a=phi+rot;
+      p.push([rr*Math.cos(a), rr*Math.sin(a)]);
+    }
+    out.push(p);
+  }
+  return out;
+}
+
+function genMaurer(d, hub, R, intensity){
+  const k=Math.max(1,Math.round(d.mK*intensity));
+  const dd=d.mD, pts=Math.round(d.mPts), out=[], p=[];
+  for(let i=0;i<=pts;i++){
+    const ang=i*dd*Math.PI/180;
+    const base=0.5+0.5*Math.sin(k*ang);
+    const r=hub+(R-hub)*base;
+    p.push([r*Math.cos(ang), r*Math.sin(ang)]);
+  }
+  out.push(p);
+  return out;
+}
+
+function genSpiral(d, hub, R, intensity){
+  const arms=Math.max(1,Math.round(d.spArms*intensity));
+  const hand=(d.spHand===true)?-1:(d.spHand===false?1:(d.spHand>=0?1:-1)), out=[];
+  for(let a=0;a<arms;a++){
+    const phase=2*Math.PI*a/arms, p=[];
+    if(d.spType==='log'){
+      const bb=Math.max(0.02,d.spB/100);
+      let phi=0; const r0=Math.max(hub,2);
+      while(true){
+        const r=r0*Math.exp(bb*phi);
+        if(r>R) break;
+        const ang=hand*phi+phase;
+        p.push([r*Math.cos(ang), r*Math.sin(ang)]);
+        phi+=0.06;
+        if(phi>200) break;
+      }
+    } else {
+      const b=d.spB; let phi=0;
+      while(true){
+        const r=hub+b*phi;
+        if(r>R) break;
+        const ang=hand*phi+phase;
+        p.push([r*Math.cos(ang), r*Math.sin(ang)]);
+        phi+=0.05;
+        if(phi>400) break;
+      }
+    }
+    if(p.length>1) out.push(p);
+  }
+  return out;
+}
+
+function genPhyllo(d, hub, R, intensity){
+  const count=Math.max(20,Math.round(d.phCount*intensity));
+  const ang=d.phAngle*Math.PI/180, c=R/Math.sqrt(count), out=[];
+  const dot=Math.max(0.4,d.phDot);
+  for(let n=1;n<=count;n++){
+    const th=n*ang, r=c*Math.sqrt(n);
+    if(r<hub) continue;
+    if(d.phDash){
+      const cx=Math.cos(th), cy=Math.sin(th);
+      out.push([[(r-dot)*cx,(r-dot)*cy],[(r+dot)*cx,(r+dot)*cy]]);
+    } else {
+      const px=r*Math.cos(th), py=r*Math.sin(th), circ=[];
+      for(let s=0;s<=8;s++){const a=2*Math.PI*s/8; circ.push([px+dot*Math.cos(a),py+dot*Math.sin(a)]);}
+      out.push(circ);
+    }
+  }
+  return out;
+}
+
+function genByPrim(d, hub, R, intensity){
+  switch(d.prim){
+    case 'harmonic': return genHarmonic(d,hub,R,intensity);
+    case 'superformula': return genSuperformula(d,hub,R,intensity);
+    case 'maurer': return genMaurer(d,hub,R,intensity);
+    case 'spiral': return genSpiral(d,hub,R,intensity);
+    case 'phyllo': return genPhyllo(d,hub,R,intensity);
+  }
+  return [];
+}
+
+// primary integer order per primitive, for detune
+const PRIM_PRIMARY={harmonic:'hN', superformula:'sfM', maurer:'mK', spiral:'spArms', phyllo:'phCount'};
+
+function discParams(side){
+  if(side==='A') return P.A;
+  if(!P.g.link) return P.B;
+  // linked: clone A, apply detune to primary order, flip spiral handedness and twist sign
+  const c=JSON.parse(JSON.stringify(P.A));
+  const key=PRIM_PRIMARY[c.prim];
+  const off = (c.prim==='phyllo') ? P.g.detune*40 : P.g.detune;
+  c[key]=c[key]+off;
+  c.spHand=-Math.sign(P.A.spHand||1);
+  c.sfTwist=-P.A.sfTwist;
+  return c;
+}
+
+// ---------- fabrication geometry ----------
+function isClosed(p){ return p.length>2 && Math.hypot(p[0][0]-p[p.length-1][0], p[0][1]-p[p.length-1][1])<0.06; }
+function polyArea(p){ let a=0; for(let i=0,n=p.length;i<n;i++){const j=(i+1)%n; a+=p[i][0]*p[j][1]-p[j][0]*p[i][1];} return Math.abs(a/2); }
+function offsetPath(pts, d, closed){
+  const n=pts.length, out=[];
+  for(let i=0;i<n;i++){
+    const a=pts[(i-1+n)%n], b=pts[i], c=pts[(i+1)%n];
+    let nx=0,ny=0;
+    if(closed||i>0){ const dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy)||1; nx+=dy/l; ny+=-dx/l; }
+    if(closed||i<n-1){ const dx=c[0]-b[0],dy=c[1]-b[1],l=Math.hypot(dx,dy)||1; nx+=dy/l; ny+=-dx/l; }
+    const l=Math.hypot(nx,ny)||1; out.push([b[0]+(nx/l)*d, b[1]+(ny/l)*d]);
+  }
+  return out;
+}
+// turn centrelines into closed contours of physical width w
+function ribbonize(polys, w){
+  const res=[];
+  for(const p of polys){
+    if(p.length<2) continue;
+    if(isClosed(p)){
+      let outer=offsetPath(p,+w/2,true), inner=offsetPath(p,-w/2,true);
+      if(polyArea(inner)>polyArea(outer)){ const t=outer; outer=inner; inner=t; }
+      res.push({band:true, outer, inner});
+    } else {
+      const L=offsetPath(p,+w/2,false), R=offsetPath(p,-w/2,false);
+      const loop=L.concat(R.slice().reverse()); loop.push(L[0]);
+      res.push({band:false, outer:loop});
+    }
+  }
+  return res;
+}
+// keep only the portions of each path outside the solid hub radius
+function clipRadial(polys, rmin){
+  if(rmin<=0) return polys;
+  const out=[];
+  for(const p of polys){ let cur=[];
+    for(const v of p){ if(Math.hypot(v[0],v[1])>=rmin) cur.push(v); else { if(cur.length>1)out.push(cur); cur=[]; } }
+    if(cur.length>1) out.push(cur);
+  }
+  return out;
+}
+// connector tabs that weld disconnected features into one piece
+function loopMeanR(p){ let s=0; for(const v of p) s+=Math.hypot(v[0],v[1]); return s/p.length; }
+function loopRadiusAt(p, ang){ let best=1e9, br=0; for(const v of p){ const a=Math.atan2(v[1],v[0]); let d=(((a-ang+Math.PI)%(2*Math.PI))+2*Math.PI)%(2*Math.PI)-Math.PI; d=Math.abs(d); if(d<best){best=d; br=Math.hypot(v[0],v[1]);} } return br; }
+function tabQuad(rIn,rOut,ang,wIn,wOut){
+  const aIn=wIn/Math.max(rIn,1), aOut=wOut/Math.max(rOut,1);
+  return [[rIn*Math.cos(ang-aIn),rIn*Math.sin(ang-aIn)],[rOut*Math.cos(ang-aOut),rOut*Math.sin(ang-aOut)],
+          [rOut*Math.cos(ang+aOut),rOut*Math.sin(ang+aOut)],[rIn*Math.cos(ang+aIn),rIn*Math.sin(ang+aIn)],
+          [rIn*Math.cos(ang-aIn),rIn*Math.sin(ang-aIn)]];
+}
+function discPoly(cx,cy,r){ const p=[]; for(let i=0;i<=12;i++){const a=2*Math.PI*i/12; p.push([cx+r*Math.cos(a),cy+r*Math.sin(a)]);} return p; }
+// curved (arced) tab: midline bows tangentially by curveRad, given physical width 2*halfW
+function curvedTab(rIn,rOut,ang,halfW,curveRad,sweep){
+  const N=16, L=[], Rr=[], sw=sweep||0;
+  for(let i=0;i<=N;i++){
+    const t=i/N, r=rIn+(rOut-rIn)*t, a=ang+sw*t+curveRad*Math.sin(Math.PI*t), da=halfW/Math.max(r,1);
+    L.push([r*Math.cos(a-da), r*Math.sin(a-da)]);
+    Rr.push([r*Math.cos(a+da), r*Math.sin(a+da)]);
+  }
+  const loop=L.concat(Rr.reverse()); loop.push(L[0]); return loop;
+}
+// concentric solid rims that weld features into one watertight piece; returns [{rOut,rIn}]
+function plateRims(){
+  const R=P.g.diameter/2, hub=P.g.hubSolid, bands=[];
+  if(P.g.rimOuter) bands.push({rOut:R, rIn:Math.max(hub, R-P.g.rimOuterW)});
+  if(P.g.rimInner) bands.push({rOut:Math.min(R, hub+P.g.rimInnerW), rIn:hub});
+  const m=Math.round(P.g.rimMid)||0;
+  for(let k=1;k<=m;k++){
+    const rc=hub+(R-hub)*k/(m+1), hw=P.g.rimMidW/2;
+    bands.push({rOut:Math.min(R, rc+hw), rIn:Math.max(0, rc-hw)});
+  }
+  return bands;
+}
+function makeTabs(centerlines){
+  const T=Math.round(P.g.tabs)||0; if(T<=0) return [];
+  const closed=centerlines.filter(isClosed).slice().sort((a,b)=>loopMeanR(a)-loopMeanR(b));
+  const R=P.g.diameter/2-2, hub=P.g.hubSolid, wh=P.g.tabW/2, ext=P.g.featW*0.7;
+  const off=P.g.tabOffset*Math.PI/180, stag=P.g.tabStagger*Math.PI/180;
+  const wOutF = P.g.tabShape==='taper'?0.45:1.0;
+  const out=[], levels=[];
+  if(P.g.tabHub) levels.push({c:true,r:hub});
+  for(const lp of closed) levels.push({c:false,lp});
+  if(P.g.tabRim) levels.push({c:true,r:R});
+  for(let i=0;i<levels.length-1;i++){
+    const A=levels[i], B=levels[i+1];
+    if(!A.c && !B.c && !P.g.tabRing) continue;
+    for(let k=0;k<T;k++){
+      const ang=off + stag*i + 2*Math.PI*k/T;
+      const rIn = A.c? A.r : loopRadiusAt(A.lp,ang);
+      const rOut= B.c? B.r : loopRadiusAt(B.lp,ang);
+      const lo=Math.max(hub*0.5, rIn-ext), hi=rOut+ext;
+      if(P.g.tabShape==='curved'){
+        out.push(curvedTab(lo,hi,ang,wh,P.g.tabCurve*Math.PI/180,P.g.tabSweep*Math.PI/180));
+      } else {
+        out.push(tabQuad(lo,hi,ang,wh,wh*wOutF));
+        if(P.g.tabShape==='rounded'){ out.push(discPoly(lo*Math.cos(ang),lo*Math.sin(ang),wh)); out.push(discPoly(hi*Math.cos(ang),hi*Math.sin(ang),wh*wOutF)); }
+      }
+    }
+  }
+  return out;
+}
+
+// ---------- segment (wedge) repeat ----------
+// keep only the vertices whose angle falls inside [a0,a0+span], splitting paths where they leave
+function angClip(polys, a0, span){
+  if(span>=2*Math.PI-1e-6) return polys;
+  const inside=(x,y)=>{ const a=Math.atan2(y,x); const d=(((a-a0)%(2*Math.PI))+2*Math.PI)%(2*Math.PI); return d<=span; };
+  const out=[];
+  for(const p of polys){ let cur=[];
+    for(const v of p){ if(inside(v[0],v[1])) cur.push(v); else { if(cur.length>1)out.push(cur); cur=[]; } }
+    if(cur.length>1) out.push(cur);
+  }
+  return out;
+}
+// clip the pattern to one wedge, then stamp it evenly around the disc
+function applyWedge(polys){
+  if(!P.g.wedge) return polys;
+  const n=Math.max(1,Math.round(P.g.wedgeCount));
+  const off=P.g.wedgeOffset*Math.PI/180, span=P.g.wedgeDeg*Math.PI/180;
+  const base=angClip(polys, off, span);
+  if(n<=1) return base;
+  const step=2*Math.PI/n, c2=Math.cos(2*off), s2=Math.sin(2*off), out=[];
+  for(let k=0;k<n;k++){
+    const rot=k*step, cr=Math.cos(rot), sr=Math.sin(rot), mir=(P.g.wedgeMirror && (k%2===1));
+    for(const p of base){
+      out.push(p.map(v=>{
+        let x=v[0], y=v[1];
+        if(mir){ const rx=c2*x+s2*y, ry=s2*x-c2*y; x=rx; y=ry; }
+        return [x*cr - y*sr, x*sr + y*cr];
+      }));
+    }
+  }
+  return out;
+}
+
+// ---------- caches ----------
+let cacheA=[], cacheB=[], cacheMA=[], cacheMB=[], cacheTabsA=[], cacheTabsB=[], cachePrevA=null, cachePrevB=null, dirty=true;
+function rebuild(){
+  const R=P.g.diameter/2 - 2, hub=P.g.hub/2;
+  cacheA=applyWedge(genByPrim(P.A, hub, R, P.g.intensity));
+  cacheB=applyWedge(genByPrim(discParams('B'), hub, R, P.g.intensity));
+  if(P.g.machine){
+    const w=P.g.featW;
+    cacheMA=ribbonize(clipRadial(cacheA, P.g.hubSolid), w);
+    cacheMB=ribbonize(clipRadial(cacheB, P.g.hubSolid), w);
+    cacheTabsA=makeTabs(clipRadial(cacheA, P.g.hubSolid));
+    cacheTabsB=makeTabs(clipRadial(cacheB, P.g.hubSolid));
+  }
+  dirty=false;
+  connCheck();
+  if(P.g.machine && P.g.dropPreview) buildDropPreview(); else { cachePrevA=null; cachePrevB=null; }
+  updateStatus();
+}
+
+// ---------- canvas ----------
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+const off1=document.createElement('canvas'), o1=off1.getContext('2d');
+const off2=document.createElement('canvas'), o2=off2.getContext('2d');
+let CSS_SIZE=640, DPR=Math.max(1,window.devicePixelRatio||1);
+function sizeCanvas(){
+  const stage=document.querySelector('.stage');
+  let s;
+  if(window.matchMedia('(max-width:820px) and (orientation:portrait)').matches){
+    s=Math.max(240, Math.min(window.innerWidth-28, window.innerHeight*0.6, 640));
+  } else {
+    s=Math.max(180, Math.min(stage.clientWidth-24, stage.clientHeight-24, 760));
+  }
+  CSS_SIZE=s;
+  cv.style.width=s+'px'; cv.style.height=s+'px';
+  cv.width=Math.round(s*DPR); cv.height=Math.round(s*DPR);
+  off1.width=cv.width; off1.height=cv.height; off2.width=cv.width; off2.height=cv.height;
+}
+function fillContour(c,p){ if(p.length<2)return; c.beginPath(); c.moveTo(p[0][0],p[0][1]); for(let i=1;i<p.length;i++)c.lineTo(p[i][0],p[i][1]); c.closePath(); c.fill(); }
+// render one real plate (material solid, voids punched) into an offscreen ctx already centred and scaled
+function tracePoly(c,p){ if(p.length<2)return; c.moveTo(p[0][0],p[0][1]); for(let i=1;i<p.length;i++)c.lineTo(p[i][0],p[i][1]); c.closePath(); }
+function renderPlate(c, ribbons, tabs, color){
+  const R=P.g.diameter/2, boreR=P.g.bore/2, hubR=P.g.hubSolid;
+  c.globalCompositeOperation='source-over'; c.fillStyle=color;
+  if(P.g.role==='slot'){
+    c.beginPath(); c.arc(0,0,R,0,2*Math.PI); c.fill();
+    c.globalCompositeOperation='destination-out'; c.fillStyle='#000';
+    for(const rb of ribbons){ c.beginPath(); tracePoly(c,rb.outer); if(rb.band) tracePoly(c,rb.inner); c.fill('evenodd'); }
+  } else {
+    c.beginPath(); c.arc(0,0,Math.max(hubR,1),0,2*Math.PI); c.fill();
+    for(const rb of ribbons){ c.beginPath(); tracePoly(c,rb.outer); if(rb.band){ tracePoly(c,rb.inner); c.fill('evenodd'); } else { c.fill(); } }
+  }
+  if(P.g.invert){
+    // swap kept material and cut void within the disc: material survives only where the pattern was void.
+    // source-out keeps the new disc only where the existing pattern is absent, and clears the old material.
+    c.globalCompositeOperation='source-out'; c.fillStyle=color;
+    c.beginPath(); c.arc(0,0,R,0,2*Math.PI); c.fill();
+    // keep a solid mounting hub regardless of inversion
+    c.globalCompositeOperation='source-over'; c.fillStyle=color;
+    c.beginPath(); c.arc(0,0,Math.max(hubR,1),0,2*Math.PI); c.fill();
+  }
+  c.globalCompositeOperation='source-over'; c.fillStyle=color;
+  if(tabs) for(const t of tabs){ c.beginPath(); tracePoly(c,t); c.fill(); }
+  for(const b of plateRims()){ if(b.rOut>b.rIn){ c.beginPath(); c.arc(0,0,b.rOut,0,2*Math.PI,false); c.arc(0,0,Math.max(0,b.rIn),0,2*Math.PI,true); c.fill('evenodd'); } }
+  if(boreR>0){ c.globalCompositeOperation='destination-out'; c.fillStyle='#000'; c.beginPath(); c.arc(0,0,boreR,0,2*Math.PI); c.fill(); }
+  c.globalCompositeOperation='source-over';
+}
+function drawPlate(offc, offctx, ribbons, tabs, color, ang, cx, cy, scale, mirror, maxis, alpha){
+  offctx.setTransform(1,0,0,1,0,0); offctx.clearRect(0,0,offc.width,offc.height);
+  offctx.save(); offctx.translate(cx,cy); offctx.scale(scale,scale);
+  if(mirror){ const [mx,my]=mirrorScale(maxis); offctx.scale(mx,my); }
+  renderPlate(offctx, ribbons, tabs, color); offctx.restore();
+  ctx.save(); ctx.translate(cx,cy); ctx.rotate(ang); ctx.globalAlpha=(alpha==null?P.g.opacity:alpha);
+  ctx.drawImage(offc, -cx, -cy); ctx.restore(); ctx.globalAlpha=1;
+}
+
+let angA=0, angB=0, playing=true, lastT=performance.now();
+
+function mirrorScale(axis){ return axis==='h'?[-1,1]:axis==='v'?[1,-1]:[-1,-1]; }
+function mirrorPolys(polys, axis){ const [mx,my]=mirrorScale(axis); return polys.map(p=>p.map(v=>[v[0]*mx,v[1]*my])); }
+
+function strokePolys(polys, color){
+  ctx.strokeStyle=color; ctx.beginPath();
+  for(const p of polys){
+    if(p.length<2) continue;
+    ctx.moveTo(p[0][0],p[0][1]);
+    for(let i=1;i<p.length;i++) ctx.lineTo(p[i][0],p[i][1]);
+  }
+  ctx.stroke();
+}
+
+function hexA(hex,a){
+  const h=hex.replace('#','');
+  const r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);
+  return 'rgba('+r+','+g+','+b+','+a+')';
+}
+function lum(hex){ const h=hex.replace('#',''); return 0.299*parseInt(h.substr(0,2),16)+0.587*parseInt(h.substr(2,2),16)+0.114*parseInt(h.substr(4,2),16); }
+// the manufactured preview always needs a light bench so the cut plates read; fall back if the art bg is dark
+function mfgBackdrop(){ return lum(P.g.bg)>=120 ? P.g.bg : '#eceae2'; }
+
+function draw(){
+ try{
+  if(dirty) rebuild();
+  const W=cv.width, H=cv.height, cx=W/2, cy=H/2;
+  const scale=(W*0.94)/P.g.diameter;
+  ctx.setTransform(1,0,0,1,0,0);
+
+  // manufactured-part preview (real plates with voids)
+  if(P.g.machine && P.g.mfgView){
+    ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
+    const back=mfgBackdrop();
+    ctx.fillStyle=back; ctx.fillRect(0,0,W,H);
+    if(P.g.dropPreview){
+      drawDropPreview(cx,cy,scale);
+      ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
+      const outRm0=(P.g.diameter/2)*scale;
+      ctx.fillStyle=back; ctx.beginPath(); ctx.rect(0,0,W,H); ctx.arc(cx,cy,outRm0,0,2*Math.PI,true); ctx.fill('evenodd');
+      ctx.fillStyle='rgba(214,52,42,0.95)'; ctx.font='13px system-ui,-apple-system,sans-serif'; ctx.textAlign='left';
+      ctx.fillText('red = not attached to the hub, drops out on export', 14, H-14);
+      return;
+    }
+    // show the two cut plates like stacked tinted sheets on a light bench: the front plate is
+    // semi-transparent so the back plate is never hidden, both patterns and their overlap read,
+    // and a light bench means the part can never collapse to a flat block or crush to black.
+    ctx.globalCompositeOperation='source-over';
+    const _aA=P.g.discOpaque?1:0.85, _aB=P.g.discOpaque?1:0.68;
+    if(P.g.showA) drawPlate(off1,o1,cacheMA,cacheTabsA,P.g.colA,angA,cx,cy,scale,false,null,_aA);
+    if(P.g.showB) drawPlate(off2,o2,cacheMB,cacheTabsB,P.g.colB,angB,cx,cy,scale,P.g.mirrorB,P.g.mirrorAxis,_aB);
+    ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
+    const outRm=(P.g.diameter/2)*scale;
+    ctx.fillStyle=back; ctx.beginPath(); ctx.rect(0,0,W,H); ctx.arc(cx,cy,outRm,0,2*Math.PI,true); ctx.fill('evenodd');
+    return;
+  }
+
+  // background / trail (works in every blend mode)
+  ctx.globalCompositeOperation='source-over';
+  if(P.g.trail>0){
+    ctx.fillStyle=hexA(P.g.bg, 1-P.g.trail);
+    ctx.fillRect(0,0,W,H);
+  } else {
+    ctx.fillStyle=P.g.bg; ctx.fillRect(0,0,W,H);
+  }
+
+  ctx.globalCompositeOperation=P.g.blend;
+  ctx.lineCap='round'; ctx.lineJoin='round';
+
+  // disc A
+  if(P.g.showA){
+  ctx.save();
+  ctx.translate(cx,cy); ctx.scale(scale,scale); ctx.rotate(angA);
+  ctx.lineWidth=P.g.lineWeight;
+  strokePolys(cacheA, hexA(P.g.colA,P.g.opacity));
+  ctx.restore();
+  }
+
+  // disc B
+  if(P.g.showB){
+  ctx.save();
+  ctx.translate(cx,cy); ctx.scale(scale,scale); ctx.rotate(angB);
+  if(P.g.mirrorB){ const [mx,my]=mirrorScale(P.g.mirrorAxis); ctx.scale(mx,my); }
+  ctx.lineWidth=P.g.lineWeight;
+  strokePolys(cacheB, hexA(P.g.colB,P.g.opacity));
+  ctx.restore();
+  }
+
+  // envelope + crop + hub
+  ctx.globalCompositeOperation='source-over';
+  const outR=(P.g.diameter/2)*scale;
+  const fadeStart=Math.min(0.985, Math.max(0.4, P.g.envelope));
+  const grad=ctx.createRadialGradient(cx,cy,outR*fadeStart, cx,cy,outR);
+  grad.addColorStop(0, hexA(P.g.bg,0));
+  grad.addColorStop(1, P.g.bg);
+  ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
+  // crop hard outside disc
+  ctx.fillStyle=P.g.bg;
+  ctx.beginPath();
+  ctx.rect(0,0,W,H);
+  ctx.arc(cx,cy,outR,0,2*Math.PI,true);
+  ctx.fill('evenodd');
+  // hub
+  const hubR=(P.g.hub/2)*scale;
+  if(hubR>0){ ctx.beginPath(); ctx.arc(cx,cy,hubR,0,2*Math.PI); ctx.fillStyle=P.g.bg; ctx.fill();
+    ctx.lineWidth=1; ctx.strokeStyle=hexA('#000000',0.06); ctx.stroke(); }
+  // centre bore (shaft hole) reference
+  const boreR=(P.g.bore/2)*scale;
+  if(boreR>0){ ctx.beginPath(); ctx.arc(cx,cy,boreR,0,2*Math.PI);
+    ctx.lineWidth=1; ctx.strokeStyle=hexA('#d97757',0.7); ctx.stroke(); }
+ } finally { ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1; }
+}
+
+function loop(now){
+  const dt=Math.min(0.1,(now-lastT)/1000); lastT=now;
+  if(playing){
+    const wA=P.g.rpm*2*Math.PI/60;
+    const ratio=P.g.drift?1.6180339887:P.g.ratio;
+    const wB=(P.g.counter?-1:1)*ratio*wA;
+    angA+=wA*dt; angB+=wB*dt;
+  }
+  draw();
+  requestAnimationFrame(loop);
+}
+
+// ---------- Nyquist / density guard ----------
+function updateStatus(){
+  const R=P.g.diameter/2;
+  const scale=(cv.width*0.94)/P.g.diameter/DPR; // css px per mm
+  let order=1;
+  const d=P.A;
+  if(d.prim==='harmonic') order=d.hN*P.g.intensity;
+  else if(d.prim==='superformula') order=Math.max(d.sfM,d.sfRings)*P.g.intensity;
+  else if(d.prim==='maurer') order=d.mPts/8;
+  else if(d.prim==='spiral') order=d.spArms*P.g.intensity*3;
+  else if(d.prim==='phyllo') order=Math.sqrt(d.phCount*P.g.intensity)*1.2;
+  const spacingPx=(2*Math.PI*R/Math.max(1,order))*scale;
+  const warn=document.getElementById('densityWarn');
+  if(warn){
+    if(spacingPx<3){ warn.classList.add('show');
+      warn.textContent='Carrier spacing ~'+spacingPx.toFixed(1)+'px is below the aliasing floor. Reduce order, intensity or diameter, or this becomes noise not moire.';
+    } else warn.classList.remove('show');
+  }
+  const st=document.getElementById('status');
+  if(st && Date.now()>=flashT){
+    const ratioNum=P.g.drift?1.6180339887:P.g.ratio;
+    const bRpm=(P.g.counter?-1:1)*ratioNum*P.g.rpm;
+    const ratio=P.g.drift?'phi':P.g.ratio.toFixed(2);
+    st.textContent='diam '+P.g.diameter+'mm  bore '+P.g.bore+'mm  A '+P.g.rpm.toFixed(1)+'rpm  B '+bRpm.toFixed(1)+'rpm  (B/A '+ratio+')  spacing '+spacingPx.toFixed(1)+'px';
+  }
+  const mw=document.getElementById('mfgWarn');
+  if(mw){
+    if(P.g.machine){
+      const Rm=P.g.diameter/2, gap=2*Math.PI*Rm/Math.max(1,order)-P.g.featW, minSlot=P.g.kerf*1.2;
+      let msgs=[];
+      if(P.g.role==='slot'&&P.g.featW<minSlot) msgs.push('slot '+P.g.featW.toFixed(1)+'mm is below the kerf floor '+minSlot.toFixed(2)+'mm');
+      if(P.g.role==='rib'&&P.g.featW<P.g.minWeb) msgs.push('rib '+P.g.featW.toFixed(1)+'mm is below min web '+P.g.minWeb.toFixed(1)+'mm');
+      if(gap<P.g.minWeb) msgs.push('rim spacing ~'+gap.toFixed(1)+'mm < '+P.g.minWeb.toFixed(1)+'mm so features merge near the edge');
+      if(P.A.prim==='superformula'&&P.A.sfRings>1&&P.g.tabs<1) msgs.push('concentric rings with no tabs will cut into separate pieces: add tabs to connect them');
+      mw.classList.add('show');
+      let cmsg='';
+      if(connReport.checked){
+        if(connReport.drop>0.005){
+          const pct=(connReport.drop*100).toFixed(connReport.drop<0.1?1:0);
+          cmsg=' Connectivity: ~'+pct+'% of disc A is not attached to the hub'+(P.g.onePiece?' and will be dropped on export: add hub and ring tabs to keep it.':', and with single-piece export off it will cut as loose bits.');
+        } else { cmsg=' Connectivity: one piece, all material reaches the hub.'; }
+      }
+      const cWarn=(connReport.checked && connReport.drop>0.005);
+      if(msgs.length){ mw.style.color='var(--orange)'; mw.textContent='Machinability: '+msgs.join('; ')+'.'+cmsg; }
+      else { mw.style.color=cWarn?'var(--orange)':'var(--green)'; mw.textContent='Machinability OK for '+P.g.material+': feature '+P.g.featW.toFixed(1)+'mm, rim web ~'+gap.toFixed(1)+'mm.'+cmsg; }
+    } else mw.classList.remove('show');
+  }
+}
+
+// ---------- UI schema ----------
+const PRIMS=[['superformula','Superformula rings'],['harmonic','Harmonic grating'],['spiral','Spiral'],['maurer','Maurer rose web'],['phyllo','Phyllotaxis field']];
+function ifPrim(side,prim){ return ()=> P[side].prim===prim && (side==='A' || !P.g.link); }
+function showB(){ return ()=> !P.g.link; }
+
+const SCHEMA=[
+ {panel:'Form & motion', open:false, controls:[
+   {scope:'g',key:'diameter',label:'Diameter',type:'range',min:120,max:600,step:5,unit:'mm',rebuild:true},
+   {scope:'g',key:'hub',label:'Hub mask',type:'range',min:0,max:140,step:2,unit:'mm',rebuild:true},
+   {scope:'g',key:'bore',label:'Centre bore (shaft)',type:'range',min:0,max:40,step:0.5,unit:'mm'},
+   {scope:'g',key:'rpm',label:'Disc A speed',type:'range',min:-15,max:15,step:0.1,unit:'rpm'},
+   {scope:'g',key:'ratio',label:'Speed ratio B / A',type:'range',min:0.2,max:3,step:0.01,disableIf:()=>P.g.drift},
+   {scope:'g',key:'drift',label:'Phase relationship',type:'btnpair',off:'Closes (rational)',on:'Drifts (golden)'},
+   {scope:'g',key:'counter',label:'Direction',type:'btnpair',off:'Same way',on:'Counter-rotate'},
+   {scope:'g',key:'intensity',label:'Calm  <>  Intense',type:'range',min:0.4,max:2.2,step:0.05,rebuild:true},
+   {note:'Calm/Intense scales symmetry order and density on both discs together. Push it and watch the spacing readout.'}
+ ]},
+ {panel:'Disc A', open:false, toggleKey:'showA', controls:[
+   {scope:'A',key:'prim',label:'Pattern',type:'sel',options:PRIMS,rebuild:true,refresh:true},
+   {scope:'A',key:'hN',label:'Spokes',type:'range',min:2,max:48,step:1,rebuild:true,showIf:ifPrim('A','harmonic')},
+   {scope:'A',key:'hWaves',label:'Radial waves',type:'range',min:0,max:8,step:0.5,rebuild:true,showIf:ifPrim('A','harmonic')},
+   {scope:'A',key:'hAmp',label:'Wave amplitude',type:'range',min:0,max:60,step:1,unit:'deg',rebuild:true,showIf:ifPrim('A','harmonic')},
+   {scope:'A',key:'sfRings',label:'Rings',type:'range',min:1,max:30,step:1,rebuild:true,showIf:ifPrim('A','superformula')},
+   {scope:'A',key:'sfM',label:'Symmetry m',type:'range',min:0,max:18,step:1,rebuild:true,showIf:ifPrim('A','superformula')},
+   {scope:'A',key:'sfN1',label:'n1 (sharpness)',type:'range',min:0.2,max:6,step:0.1,rebuild:true,showIf:ifPrim('A','superformula')},
+   {scope:'A',key:'sfN2',label:'n2',type:'range',min:0.1,max:6,step:0.1,rebuild:true,showIf:ifPrim('A','superformula')},
+   {scope:'A',key:'sfN3',label:'n3',type:'range',min:0.1,max:6,step:0.1,rebuild:true,showIf:ifPrim('A','superformula')},
+   {scope:'A',key:'sfDeform',label:'Deform',type:'range',min:0,max:1,step:0.02,rebuild:true,showIf:ifPrim('A','superformula')},
+   {scope:'A',key:'sfTwist',label:'Ring twist',type:'range',min:-20,max:20,step:0.5,unit:'deg',rebuild:true,showIf:ifPrim('A','superformula')},
+   {scope:'A',key:'mK',label:'Petals k',type:'range',min:1,max:18,step:1,rebuild:true,showIf:ifPrim('A','maurer')},
+   {scope:'A',key:'mD',label:'Degree step d',type:'range',min:1,max:179,step:1,unit:'deg',rebuild:true,showIf:ifPrim('A','maurer')},
+   {scope:'A',key:'mPts',label:'Chords',type:'range',min:120,max:1440,step:20,rebuild:true,showIf:ifPrim('A','maurer')},
+   {scope:'A',key:'spArms',label:'Arms',type:'range',min:1,max:24,step:1,rebuild:true,showIf:ifPrim('A','spiral')},
+   {scope:'A',key:'spB',label:'Tightness',type:'range',min:1,max:30,step:0.5,rebuild:true,showIf:ifPrim('A','spiral')},
+   {scope:'A',key:'spType',label:'Type',type:'sel',options:[['arch','Archimedean (even)'],['log','Logarithmic (warp)']],rebuild:true,showIf:ifPrim('A','spiral')},
+   {scope:'A',key:'phCount',label:'Points',type:'range',min:80,max:2000,step:20,rebuild:true,showIf:ifPrim('A','phyllo')},
+   {scope:'A',key:'phAngle',label:'Divergence angle',type:'range',min:130,max:145,step:0.001,unit:'deg',rebuild:true,showIf:ifPrim('A','phyllo')},
+   {scope:'A',key:'phDot',label:'Mark size',type:'range',min:0.4,max:3,step:0.1,unit:'mm',rebuild:true,showIf:ifPrim('A','phyllo')},
+   {scope:'A',key:'phDash',label:'Mark style',type:'btnpair',off:'Dots',on:'Radial dashes',rebuild:true,showIf:ifPrim('A','phyllo')}
+ ]},
+ {panel:'Disc B', open:false, toggleKey:'showB', controls:[
+   {scope:'g',key:'mirrorB',label:'Mirror disc B',type:'btnpair',off:'Off',on:'On',refresh:true},
+   {scope:'g',key:'mirrorAxis',label:'Mirror axis',type:'sel',options:[['h','Horizontal (flip X)'],['v','Vertical (flip Y)'],['p','Point (180°)']],showIf:()=>P.g.mirrorB},
+   {scope:'g',key:'link',label:'Mirror disc A',type:'btnpair',off:'Independent B',on:'Linked (symmetric moire)',rebuild:true,refresh:true},
+   {scope:'g',key:'detune',label:'Detune (order offset)',type:'range',min:-4,max:4,step:1,rebuild:true,showIf:()=>P.g.link},
+   {note:'Detune 0 gives one breathing flower. +/-1 or 2 sets the rosette travelling. This is your main zen-to-trippy structural knob.',showIf:()=>P.g.link},
+   {scope:'B',key:'prim',label:'Pattern',type:'sel',options:PRIMS,rebuild:true,refresh:true,showIf:showB()},
+   {scope:'B',key:'sfRings',label:'Rings',type:'range',min:1,max:30,step:1,rebuild:true,showIf:()=>!P.g.link&&P.B.prim==='superformula'},
+   {scope:'B',key:'sfM',label:'Symmetry m',type:'range',min:0,max:18,step:1,rebuild:true,showIf:()=>!P.g.link&&P.B.prim==='superformula'},
+   {scope:'B',key:'sfDeform',label:'Deform',type:'range',min:0,max:1,step:0.02,rebuild:true,showIf:()=>!P.g.link&&P.B.prim==='superformula'},
+   {scope:'B',key:'hN',label:'Spokes',type:'range',min:2,max:48,step:1,rebuild:true,showIf:()=>!P.g.link&&P.B.prim==='harmonic'},
+   {scope:'B',key:'spArms',label:'Arms',type:'range',min:1,max:24,step:1,rebuild:true,showIf:()=>!P.g.link&&P.B.prim==='spiral'},
+   {scope:'B',key:'spHand',label:'Handedness',type:'btnpair',off:'CW',on:'CCW',rebuild:true,showIf:()=>!P.g.link&&P.B.prim==='spiral'},
+   {scope:'B',key:'mK',label:'Petals k',type:'range',min:1,max:18,step:1,rebuild:true,showIf:()=>!P.g.link&&P.B.prim==='maurer'},
+   {scope:'B',key:'phCount',label:'Points',type:'range',min:80,max:2000,step:20,rebuild:true,showIf:()=>!P.g.link&&P.B.prim==='phyllo'}
+ ]},
+ {panel:'Repeat & segments', open:false, controls:[
+   {scope:'g',key:'wedge',label:'Segment repeat',type:'btnpair',off:'Off (full disc)',on:'On (wedges)',rebuild:true,refresh:true},
+   {scope:'g',key:'wedgeDeg',label:'Segment angle',type:'range',min:1,max:360,step:1,unit:'deg',rebuild:true,showIf:()=>P.g.wedge},
+   {scope:'g',key:'wedgeCount',label:'Pieces around disc',type:'range',min:1,max:24,step:1,rebuild:true,showIf:()=>P.g.wedge},
+   {scope:'g',key:'wedgeOffset',label:'Rotation offset',type:'range',min:0,max:360,step:1,unit:'deg',rebuild:true,showIf:()=>P.g.wedge},
+   {scope:'g',key:'wedgeMirror',label:'Alternate segments',type:'btnpair',off:'Repeat',on:'Mirror (kaleidoscope)',rebuild:true,showIf:()=>P.g.wedge},
+   {note:'Clips the pattern to one wedge of the chosen angle, then stamps that wedge evenly around the disc. Example: 90 deg angle with 2 pieces gives two opposing quarter-segments. Match the angle to 360/pieces to tile with no gaps; mirror flips every other copy for a kaleidoscope.',showIf:()=>P.g.wedge}
+ ]},
+ {panel:'Fabrication', open:false, controls:[
+   {scope:'g',key:'machine',label:'Machinable mode',type:'btnpair',off:'Off (art)',on:'On (real part)',rebuild:true,refresh:true},
+   {scope:'g',key:'mfgView',label:'Preview',type:'btnpair',off:'Art lines',on:'Manufactured part',refresh:true,showIf:()=>P.g.machine},
+   {scope:'g',key:'discOpaque',label:'Disc material',type:'btnpair',off:'Translucent',on:'Opaque',showIf:()=>P.g.machine&&P.g.mfgView},
+   {note:'Opaque stacks the plates like solid sheets: the front disc hides the back except through its holes (realistic for metal). Translucent tints both so the full interference reads.',showIf:()=>P.g.machine&&P.g.mfgView},
+   {scope:'g',key:'material',label:'Material',type:'sel',options:[['acrylic','Acrylic (laser)'],['aluminium','Aluminium (waterjet)'],['custom','Custom']],onset:applyMaterial,showIf:()=>P.g.machine},
+   {scope:'g',key:'kerf',label:'Kerf',type:'range',min:0.05,max:2,step:0.05,unit:'mm',showIf:()=>P.g.machine},
+   {scope:'g',key:'role',label:'Pattern is',type:'btnpair',off:'Slots in plate',on:'Standing ribs',onVal:'rib',offVal:'slot',rebuild:true,refresh:true,showIf:()=>P.g.machine},
+   {scope:'g',key:'invert',label:'Invert cut / kept',type:'btnpair',off:'Normal',on:'Inverted',refresh:true,showIf:()=>P.g.machine},
+   {scope:'g',key:'onePiece',label:'Single-piece export',type:'btnpair',off:'Off',on:'On',rebuild:true,showIf:()=>P.g.machine},
+   {scope:'g',key:'dropPreview',label:'Drop preview',type:'btnpair',off:'Off',on:'Show what drops',rebuild:true,showIf:()=>P.g.machine&&P.g.mfgView},
+   {type:'buttons',items:[{id:'fretSetup',label:'Acrylic fretwork setup (3mm, centre hub)',run:applyFretworkSetup}],showIf:()=>P.g.machine},
+   {note:'Inverting swaps which sections are cut away and which are left as material (the mounting hub always stays solid). Tabs and rims are added afterwards, so they remain solid either way.',showIf:()=>P.g.machine&&P.g.invert},
+   {scope:'g',key:'featW',label:'Feature width',type:'range',min:0.3,max:8,step:0.1,unit:'mm',rebuild:true,showIf:()=>P.g.machine},
+   {scope:'g',key:'minWeb',label:'Min web (check only)',type:'range',min:0.5,max:8,step:0.1,unit:'mm',showIf:()=>P.g.machine},
+   {scope:'g',key:'hubSolid',label:'Solid hub radius',type:'range',min:5,max:90,step:1,unit:'mm',rebuild:true,showIf:()=>P.g.machine},
+   {warnId:'mfgWarn'},
+   {note:'Machinable mode rebuilds the centrelines as closed contours of real width and previews the actual cut plate. The A and B SVG/DXF exports follow this mode.',showIf:()=>P.g.machine}
+ ]},
+ {panel:'Tabs (connectors)', open:false, controls:[
+   {note:'Tabs weld disconnected features (concentric rings) into one cuttable piece. They are merged into the exported outline, so the laser cuts around them instead of through them.',showIf:()=>P.g.machine},
+   {scope:'g',key:'tabs',label:'Tabs per ring',type:'range',min:0,max:12,step:1,rebuild:true,showIf:()=>P.g.machine},
+   {scope:'g',key:'tabW',label:'Tab width',type:'range',min:1,max:14,step:0.5,unit:'mm',rebuild:true,showIf:()=>P.g.machine},
+   {scope:'g',key:'tabShape',label:'Tab shape',type:'sel',options:[['straight','Straight'],['taper','Tapered'],['rounded','Rounded ends'],['curved','Curved (arced)']],rebuild:true,refresh:true,showIf:()=>P.g.machine},
+   {scope:'g',key:'tabCurve',label:'Curve amount',type:'range',min:-90,max:90,step:1,unit:'deg',rebuild:true,showIf:()=>P.g.machine&&P.g.tabShape==='curved'},
+   {scope:'g',key:'tabSweep',label:'Start / end stagger',type:'range',min:-60,max:60,step:1,unit:'deg',rebuild:true,showIf:()=>P.g.machine&&P.g.tabShape==='curved'},
+   {note:'Curved tabs bow tangentially instead of running straight out: gentler stress at the joint and a more organic look. Curve amount sets the mid bulge (negative bows the other way). Start/end stagger offsets each tab\u2019s outer anchor from its inner one by the same angle, so every tab leans the same way and sweeps coherently with the pattern\u2019s rotation.',showIf:()=>P.g.machine&&P.g.tabShape==='curved'},
+   {scope:'g',key:'tabOffset',label:'Angular offset',type:'range',min:0,max:180,step:1,unit:'deg',rebuild:true,showIf:()=>P.g.machine},
+   {scope:'g',key:'tabStagger',label:'Stagger per ring',type:'range',min:0,max:60,step:1,unit:'deg',rebuild:true,showIf:()=>P.g.machine},
+   {scope:'g',key:'tabRing',label:'Ring to ring',type:'btnpair',off:'No',on:'Yes',rebuild:true,showIf:()=>P.g.machine},
+   {scope:'g',key:'tabHub',label:'Hub to inner ring',type:'btnpair',off:'No',on:'Yes',rebuild:true,showIf:()=>P.g.machine},
+   {scope:'g',key:'tabRim',label:'Outer ring to rim',type:'btnpair',off:'No',on:'Yes',rebuild:true,showIf:()=>P.g.machine},
+   {note:'Structural rims: continuous solid rings that bind everything they cross into one watertight piece. Strongest way to guarantee a single part.',showIf:()=>P.g.machine},
+   {scope:'g',key:'rimOuter',label:'Outer rim',type:'btnpair',off:'Off',on:'On',refresh:true,showIf:()=>P.g.machine},
+   {scope:'g',key:'rimOuterW',label:'Outer rim width',type:'range',min:0.5,max:20,step:0.5,unit:'mm',showIf:()=>P.g.machine&&P.g.rimOuter},
+   {scope:'g',key:'rimInner',label:'Inner rim (hub)',type:'btnpair',off:'Off',on:'On',refresh:true,showIf:()=>P.g.machine},
+   {scope:'g',key:'rimInnerW',label:'Inner rim width',type:'range',min:0.5,max:20,step:0.5,unit:'mm',showIf:()=>P.g.machine&&P.g.rimInner},
+   {scope:'g',key:'rimMid',label:'Middle rims',type:'range',min:0,max:4,step:1,showIf:()=>P.g.machine},
+   {scope:'g',key:'rimMidW',label:'Middle rim width',type:'range',min:0.5,max:16,step:0.5,unit:'mm',showIf:()=>P.g.machine}
+ ]},
+ {panel:'Colour & blend', open:false, controls:[
+   {scope:'g',key:'blend',label:'Blend',type:'sel',options:[['multiply','Multiply (ink, light bg)'],['screen','Screen (glow, dark bg)'],['source-over','Normal']],onset:syncBgForBlend},
+   {scope:'g',key:'colA',label:'Disc A colour',type:'color'},
+   {scope:'g',key:'colB',label:'Disc B colour',type:'color'},
+   {scope:'g',key:'bg',label:'Background',type:'color'},
+   {scope:'g',key:'opacity',label:'Line opacity',type:'range',min:0.1,max:1,step:0.02},
+   {scope:'g',key:'lineWeight',label:'Line weight',type:'range',min:0.15,max:2,step:0.05,unit:'mm',rebuild:false},
+   {scope:'g',key:'envelope',label:'Edge fade start',type:'range',min:0.4,max:0.98,step:0.01,disableIf:()=>P.g.machine&&P.g.mfgView},
+   {scope:'g',key:'trail',label:'Motion trail',type:'range',min:0,max:0.95,step:0.05,disableIf:()=>P.g.machine&&P.g.mfgView},
+   {warnId:'densityWarn'}
+ ]},
+ {panel:'Export', open:false, controls:[
+   {note:'Per-disc vector files follow the current Fabrication mode. SVG/PNG are for art and proofing; DXF is for CAM (laser/waterjet).'},
+   {type:'buttons', items:[
+     {id:'expA',label:'Disc A SVG'},
+     {id:'expB',label:'Disc B SVG'},
+     {id:'expAd',label:'Disc A DXF'},
+     {id:'expBd',label:'Disc B DXF'},
+     {id:'expC',label:'Composite SVG'},
+     {id:'expP',label:'PNG snapshot',cls:'accent'}
+   ]}
+ ]}
+];
+
+function syncBgForBlend(){
+  if(P.g.blend==='screen'){ if(P.g.bg.toLowerCase()==='#faf6ec'||P.g.bg.toLowerCase()==='#ffffff'){P.g.bg='#0c0c12';} }
+  else { if(P.g.bg==='#0c0c12'){P.g.bg='#faf6ec';} }
+  refreshControlValues();
+}
+
+// ---------- UI build ----------
+const sidebar=document.getElementById('sidebar');
+const liveControls=[];
+const rangeCtls=[];
+const locks=new Set();
+// connectors (tabs + rims) are locked from Randomize by default; click any lock to include it
+['g.tabs','g.tabW','g.tabOffset','g.tabStagger','g.tabCurve','g.tabSweep','g.rimOuterW','g.rimInnerW','g.rimMid','g.rimMidW'].forEach(k=>locks.add(k));
+const headerToggles=[];
+function updateHeaderToggles(){ for(const p of headerToggles) p(); }
+
+function build(){
+  sidebar.innerHTML='';
+  liveControls.length=0; rangeCtls.length=0; headerToggles.length=0;
+  for(const pan of SCHEMA){
+    const panel=document.createElement('div');
+    panel.className='panel'+(pan.open?'':' collapsed');
+    panel.id='pnl-'+pan.panel.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+    const h=document.createElement('h3');
+    const ttl=document.createElement('span'); ttl.className='ttl'; ttl.textContent=pan.panel; h.appendChild(ttl);
+    if(pan.toggleKey){
+      const eye=document.createElement('button'); eye.className='eye'; eye.title='Show or hide this disc';
+      const paint=()=>{ const on=!!P.g[pan.toggleKey]; eye.textContent=on?'shown':'hidden'; eye.classList.toggle('off',!on); };
+      paint(); headerToggles.push(paint);
+      eye.onclick=(e)=>{ e.stopPropagation(); P.g[pan.toggleKey]=!P.g[pan.toggleKey]; paint(); };
+      h.appendChild(eye);
+    }
+    const chip=document.createElement('span'); chip.className='chip'; chip.textContent=pan.open?'hide':'show'; h.appendChild(chip);
+    const body=document.createElement('div'); body.className='body';
+    h.onclick=()=>{panel.classList.toggle('collapsed'); chip.textContent=panel.classList.contains('collapsed')?'show':'hide';};
+    panel.appendChild(h); panel.appendChild(body);
+    for(const c of pan.controls) buildControl(c, body);
+    sidebar.appendChild(panel);
+  }
+  const foot=document.createElement('div'); foot.className='foot';
+  foot.textContent='Geometry is generated once per disc in its own frame, then rotated live. Disc SVG exports are that raw frame, so the cut matches the screen.';
+  sidebar.appendChild(foot);
+  refreshVisibility();
+}
+
+function buildControl(c, parent){
+  if(c.note!==undefined){
+    const n=document.createElement('div'); n.className='note'; n.textContent=c.note;
+    if(c.showIf) c._el=n, liveControls.push({c,el:n,kind:'note'});
+    parent.appendChild(n); return;
+  }
+  if(c.warnId!==undefined){
+    const w=document.createElement('div'); w.className='warn'; w.id=c.warnId; parent.appendChild(w); return;
+  }
+  const wrap=document.createElement('div');
+  const val=()=>P[c.scope][c.key];
+
+  if(c.type==='range'){
+    wrap.className='ctl';
+    const head=document.createElement('div'); head.className='ctl-head';
+    const nm=document.createElement('span'); nm.className='nm'; nm.textContent=c.label;
+    const num=document.createElement('input'); num.type='number'; num.className='numin';
+    num.min=c.min; num.max=c.max; num.step=c.step; num.value=val();
+    const unit=document.createElement('span'); unit.className='unit'; unit.textContent=c.unit||'';
+    const lock=document.createElement('button'); lock.className='lockbtn'; lock.title='Lock this value (skipped when randomizing)';
+    lock.innerHTML='<svg viewBox="0 0 24 24" width="13" height="13"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2.4"/><rect x="5" y="10.5" width="14" height="9.5" rx="2" fill="currentColor"/></svg>';
+    const lk=c.scope+'.'+c.key;
+    const paintLock=()=>lock.classList.toggle('on', locks.has(lk)); paintLock();
+    lock.onclick=()=>{ if(locks.has(lk)) locks.delete(lk); else locks.add(lk); paintLock(); };
+    head.appendChild(nm); head.appendChild(num); head.appendChild(unit); head.appendChild(lock);
+
+    const inp=document.createElement('input'); inp.type='range'; inp.min=c.min; inp.max=c.max; inp.step=c.step; inp.value=val();
+    const ribbon=()=>{ const pct=((parseFloat(inp.value)-c.min)/(c.max-c.min))*100; inp.style.background='linear-gradient(to right, #e7a98f '+pct+'%, var(--lgray) '+pct+'%)'; };
+    const fmtNum=(v)=> (c.step<1? +(+v).toFixed(3): v);
+    ribbon();
+    inp.oninput=()=>{ const v=parseFloat(inp.value); P[c.scope][c.key]=v; num.value=fmtNum(v); ribbon(); if(c.rebuild)dirty=true; updateStatus(); };
+    num.oninput=()=>{ let v=parseFloat(num.value); if(isNaN(v))return; v=Math.min(c.max,Math.max(c.min,v)); P[c.scope][c.key]=v; inp.value=v; ribbon(); if(c.rebuild)dirty=true; updateStatus(); };
+    num.onblur=()=>{ let v=parseFloat(num.value); if(isNaN(v))v=val(); v=Math.min(c.max,Math.max(c.min,v)); P[c.scope][c.key]=v; inp.value=v; num.value=fmtNum(v); ribbon(); };
+    wrap.appendChild(head); wrap.appendChild(inp);
+    c._set=(v)=>{ inp.value=v; num.value=fmtNum(v); ribbon(); };
+    rangeCtls.push(c);
+  }
+  else if(c.type==='sel'){
+    wrap.className='ctl sel';
+    const lab=document.createElement('label'); lab.innerHTML='<span>'+c.label+'</span>';
+    const sel=document.createElement('select');
+    for(const o of c.options){const op=document.createElement('option'); op.value=o[0]; op.textContent=o[1]; sel.appendChild(op);} 
+    sel.value=val();
+    sel.onchange=()=>{ P[c.scope][c.key]=sel.value; if(c.rebuild) dirty=true; if(c.refresh) refreshVisibility(); if(c.onset)c.onset(); updateStatus(); };
+    wrap.appendChild(lab); wrap.appendChild(sel);
+    c._set=(v)=>{sel.value=v;};
+  }
+  else if(c.type==='color'){
+    wrap.className='ctl color';
+    const lab=document.createElement('label'); lab.style.margin=0; lab.innerHTML='<span>'+c.label+'</span>';
+    const inp=document.createElement('input'); inp.type='color'; inp.value=val();
+    inp.oninput=()=>{ P[c.scope][c.key]=inp.value; };
+    wrap.appendChild(lab); wrap.appendChild(inp);
+    c._set=(v)=>{inp.value=v;};
+  }
+  else if(c.type==='btnpair'){
+    wrap.className='ctl';
+    const lab=document.createElement('label'); lab.innerHTML='<span>'+c.label+'</span>'; wrap.appendChild(lab);
+    const row=document.createElement('div'); row.className='row';
+    const b0=document.createElement('button'), b1=document.createElement('button');
+    b0.className='btn toggle'; b1.className='btn toggle';
+    b0.textContent=c.off; b1.textContent=c.on;
+    const hasVals=('onVal' in c), ov=hasVals?c.onVal:true, ofv=hasVals?c.offVal:false;
+    const isOn=()=> hasVals ? (val()===ov) : !!val();
+    const paint=()=>{ const on=isOn(); b1.classList.toggle('on',on); b0.classList.toggle('on',!on); };
+    paint();
+    b0.onclick=()=>{ P[c.scope][c.key]=ofv; paint(); if(c.rebuild)dirty=true; if(c.refresh)refreshVisibility(); if(c.onset)c.onset(); updateStatus(); };
+    b1.onclick=()=>{ P[c.scope][c.key]=ov; paint(); if(c.rebuild)dirty=true; if(c.refresh)refreshVisibility(); if(c.onset)c.onset(); updateStatus(); };
+    row.appendChild(b0); row.appendChild(b1); wrap.appendChild(row);
+    c._set=()=>paint();
+  }
+  else if(c.type==='buttons'){
+    wrap.className='ctl';
+    const row=document.createElement('div'); row.className='row';
+    for(const it of c.items){
+      const b=document.createElement('button'); b.id=it.id; b.className='btn'+(it.cls?' '+it.cls:''); b.textContent=it.label;
+      if(it.run) b.onclick=it.run;
+      row.appendChild(b);
+    }
+    wrap.appendChild(row);
+  }
+  if(c.showIf || c.disableIf) liveControls.push({c,el:wrap});
+  c._el=wrap;
+  parent.appendChild(wrap);
+}
+
+function refreshVisibility(){
+  for(const lc of liveControls){
+    const c=lc.c;
+    if(c.showIf){ lc.el.classList.toggle('hidden', !c.showIf()); }
+    if(c.disableIf){ const dis=c.disableIf(); lc.el.style.opacity=dis?0.4:1; lc.el.style.pointerEvents=dis?'none':'auto'; }
+  }
+}
+function refreshControlValues(){
+  for(const pan of SCHEMA) for(const c of pan.controls){ if(c._set) c._set(P[c.scope]?P[c.scope][c.key]:undefined); }
+  updateHeaderToggles();
+}
+
+// ---------- presets ----------
+const PRESETS={
+  zen:{g:{blend:'multiply',bg:'#faf6ec',colA:'#1f6f6b',colB:'#c2603f',ratio:1,drift:true,counter:true,intensity:0.95,detune:0,link:true,trail:0},
+       A:{prim:'superformula',sfRings:9,sfM:6,sfN1:1,sfN2:1.4,sfN3:1.4,sfDeform:0.55,sfTwist:5}},
+  bloom:{g:{blend:'multiply',bg:'#faf6ec',colA:'#2a4a7a',colB:'#d97757',ratio:1,drift:false,counter:true,intensity:1.1,detune:1,link:true,envelope:0.66,lineWeight:0.5,trail:0},
+       A:{prim:'harmonic',hN:18,hWaves:2,hAmp:16}},
+  stargate:{g:{blend:'screen',bg:'#0c0c12',colA:'#39c0c8',colB:'#e0586a',ratio:1,drift:false,counter:true,intensity:1,detune:0,link:true,envelope:0.5,lineWeight:0.45,trail:0.55},
+       A:{prim:'spiral',spArms:3,spB:6,spType:'arch',spHand:1}},
+  lace:{g:{blend:'multiply',bg:'#f7f4ec',colA:'#3a3a55',colB:'#b8543f',ratio:1,drift:true,counter:true,intensity:1,detune:0,link:true,envelope:0.7,lineWeight:0.35,trail:0},
+       A:{prim:'maurer',mK:6,mD:31,mPts:720}},
+  shimmer:{g:{blend:'screen',bg:'#0c0c12',colA:'#7fd0a0',colB:'#c89bff',ratio:1,drift:true,counter:true,intensity:1,detune:0,link:true,envelope:0.55,lineWeight:0.5,trail:0.4},
+       A:{prim:'phyllo',phCount:700,phAngle:137.507,phDot:1.1,phDash:true}}
+};
+function applyPreset(name){
+  const pr=PRESETS[name]; if(!pr) return;
+  Object.assign(P.g, pr.g);
+  Object.assign(P.A, pr.A);
+  dirty=true; refreshVisibility(); refreshControlValues(); updateStatus();
+}
+
+function applyMaterial(){
+  if(P.g.material==='acrylic'){ P.g.kerf=0.15; P.g.minWeb=1.5; if(P.g.featW<1)P.g.featW=1.2; }
+  else if(P.g.material==='aluminium'){ P.g.kerf=1.0; P.g.minWeb=3.0; if(P.g.featW<2)P.g.featW=2.5; }
+  dirty=true; refreshControlValues(); updateStatus();
+}
+
+// ---------- randomize ----------
+function randomize(){
+  randUndo=JSON.parse(JSON.stringify({g:P.g,A:P.A,B:P.B}));
+  const SKIP=['diameter','hub','bore','rpm','ratio','kerf','minWeb','featW','hubSolid','bridges','bridgeW','lineWeight','opacity','envelope','trail','wedgeDeg','wedgeCount','wedgeOffset'];
+  let seed=parseInt(document.getElementById('seed').value||'0',10)||0;
+  const rng=mulberry32(seed);
+  for(const c of rangeCtls){
+    if(SKIP.indexOf(c.key)>=0) continue;
+    if(locks.has(c.scope+'.'+c.key)) continue;
+    if(c.showIf && !c.showIf()) continue;
+    let v=c.min+rng()*(c.max-c.min);
+    v=Math.round(v/c.step)*c.step;
+    v=Math.min(c.max,Math.max(c.min,v));
+    P[c.scope][c.key]=v; if(c._set)c._set(v);
+  }
+  document.getElementById('seed').value=seed+1;
+  dirty=true; refreshVisibility(); updateStatus();
+}
+
+// ---------- SVG export ----------
+function polysToSVG(polys, color, weight, D){
+  const off=D/2; let s='';
+  for(const p of polys){
+    if(p.length<2) continue;
+    let d='M '+(p[0][0]+off).toFixed(2)+' '+(p[0][1]+off).toFixed(2);
+    for(let i=1;i<p.length;i++) d+=' L '+(p[i][0]+off).toFixed(2)+' '+(p[i][1]+off).toFixed(2);
+    s+='<path d="'+d+'" fill="none" stroke="'+color+'" stroke-width="'+weight+'" stroke-linecap="round" stroke-linejoin="round"/>\n';
+  }
+  return s;
+}
+function discSVG(side){
+  const D=P.g.diameter, off=D/2, hubR=P.g.hub/2;
+  const color=(side==='A')?P.g.colA:P.g.colB;
+  const needMirror=(side==='B'&&P.g.mirrorB);
+  if(P.g.machine){
+    let loops=plateContours(side);
+    if(needMirror) loops=mirrorPolys(loops,P.g.mirrorAxis);
+    let body='';
+    for(const lp of loops) body+=polysToSVG([lp],color,P.g.lineWeight,D);
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="'+D+'mm" height="'+D+'mm" viewBox="0 0 '+D+' '+D+'">\n'+body+'</svg>';
+  }
+  const rawPolys=(side==='A')?cacheA:cacheB;
+  const polys=needMirror?mirrorPolys(rawPolys,P.g.mirrorAxis):rawPolys;
+  let body=polysToSVG(polys,color,P.g.lineWeight,D);
+  body+='<circle cx="'+off+'" cy="'+off+'" r="'+(D/2-1)+'" fill="none" stroke="#888888" stroke-width="0.3"/>\n';
+  if(hubR>0) body+='<circle cx="'+off+'" cy="'+off+'" r="'+hubR+'" fill="none" stroke="#bbbbbb" stroke-width="0.3"/>\n';
+  if(P.g.bore>0) body+='<circle cx="'+off+'" cy="'+off+'" r="'+(P.g.bore/2)+'" fill="none" stroke="#d97757" stroke-width="0.4"/>\n';
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="'+D+'mm" height="'+D+'mm" viewBox="0 0 '+D+' '+D+'">\n'+body+'</svg>';
+}
+function compositeSVG(){
+  const D=P.g.diameter, off=D/2;
+  const degA=angA*180/Math.PI, degB=angB*180/Math.PI;
+  const blend=(P.g.blend==='screen')?'screen':(P.g.blend==='multiply'?'multiply':'normal');
+  let s='<svg xmlns="http://www.w3.org/2000/svg" width="'+D+'mm" height="'+D+'mm" viewBox="0 0 '+D+' '+D+'">\n';
+  s+='<rect width="'+D+'" height="'+D+'" fill="'+P.g.bg+'"/>\n';
+  s+='<g transform="rotate('+degA.toFixed(2)+' '+off+' '+off+')" style="mix-blend-mode:normal">\n'+polysToSVG(cacheA,P.g.colA,P.g.lineWeight,D)+'</g>\n';
+  const bPolys=P.g.mirrorB?mirrorPolys(cacheB,P.g.mirrorAxis):cacheB;
+  const [bmx,bmy]=P.g.mirrorB?mirrorScale(P.g.mirrorAxis):[1,1];
+  const bXform='rotate('+degB.toFixed(2)+' '+off+' '+off+') translate('+off+','+off+') scale('+bmx+','+bmy+') translate(-'+off+',-'+off+')';
+  s+='<g transform="'+bXform+'" style="mix-blend-mode:'+blend+'">\n'+polysToSVG(bPolys,P.g.colB,P.g.lineWeight,D)+'</g>\n';
+  s+='</svg>';
+  return s;
+}
+// ---------- contour tracing for machinable export (raster union) ----------
+function traceBinary(grid,W,H){
+  const get=(x,y)=>(x<0||y<0||x>=W||y>=H)?0:grid[y*W+x];
+  const segs=[];
+  for(let y=0;y<H-1;y++)for(let x=0;x<W-1;x++){
+    const tl=get(x,y),tr=get(x+1,y),br=get(x+1,y+1),bl=get(x,y+1);
+    const Tp=[x+0.5,y],Rp=[x+1,y+0.5],Bp=[x+0.5,y+1],Lp=[x,y+0.5];
+    const cr=[];
+    if(tl!==tr)cr.push(Tp); if(tr!==br)cr.push(Rp); if(br!==bl)cr.push(Bp); if(bl!==tl)cr.push(Lp);
+    if(cr.length===2)segs.push([cr[0],cr[1]]);
+    else if(cr.length===4){segs.push([Tp,Rp]);segs.push([Bp,Lp]);}
+  }
+  const K=p=>p[0].toFixed(1)+','+p[1].toFixed(1);
+  const nb=new Map(),addnb=(a,b)=>{const k=K(a);if(!nb.has(k))nb.set(k,[]);nb.get(k).push(b);};
+  for(const s of segs){addnb(s[0],s[1]);addnb(s[1],s[0]);}
+  const used=new Set(),ek=(a,b)=>{const ka=K(a),kb=K(b);return ka<kb?ka+'|'+kb:kb+'|'+ka;};
+  const loops=[];
+  for(const s of segs){const a=s[0],b=s[1];if(used.has(ek(a,b)))continue;
+    const loop=[a];let cur=b;used.add(ek(a,b));let g=0;
+    while(K(cur)!==K(a)&&g++<5e6){loop.push(cur);const cs=nb.get(K(cur))||[];let nx=null;
+      for(const c of cs){if(!used.has(ek(cur,c))){nx=c;break;}}
+      if(!nx)break;used.add(ek(cur,nx));cur=nx;}
+    loop.push(a);if(loop.length>3)loops.push(loop);}
+  return loops;
+}
+function rdp(pts,eps){
+  if(pts.length<4)return pts;
+  const keep=new Uint8Array(pts.length); keep[0]=1; keep[pts.length-1]=1;
+  const st=[[0,pts.length-1]];
+  while(st.length){ const seg=st.pop(), s=seg[0], e=seg[1];
+    const x1=pts[s][0],y1=pts[s][1],dx=pts[e][0]-x1,dy=pts[e][1]-y1,len=Math.hypot(dx,dy)||1;
+    let dmax=0,idx=-1;
+    for(let i=s+1;i<e;i++){ const d=Math.abs((pts[i][0]-x1)*dy-(pts[i][1]-y1)*dx)/len; if(d>dmax){dmax=d;idx=i;} }
+    if(dmax>eps&&idx>0){ keep[idx]=1; st.push([s,idx]); st.push([idx,e]); }
+  }
+  const out=[]; for(let i=0;i<pts.length;i++) if(keep[i]) out.push(pts[i]); return out;
+}
+// rasterise the real plate and trace it into merged, connected mm contours (y-down, centred)
+// Keep only the material connected to the central hub. Flood-fill outward from the hub
+// annulus over material pixels, then drop anything the flood cannot reach. This makes the
+// exported part one connected piece by construction. Returns counts so callers can report.
+function floodKeepHub(grid, RES, scale, boreR, hubR){
+  const cx=RES/2, cy=RES/2;
+  const seen=new Uint8Array(RES*RES);
+  const stack=[];
+  const r0=Math.max(0,boreR)*scale, r1=Math.max(boreR,hubR)*scale;
+  // +2px outer tolerance catches antialiased hub edges that fall just below r1
+  const lo=Math.max(0,Math.floor(cx-r1-2)), hi=Math.min(RES-1,Math.ceil(cx+r1+2));
+  for(let y=lo;y<=hi;y++) for(let x=lo;x<=hi;x++){
+    const dx=x-cx, dy=y-cy, r=Math.hypot(dx,dy);
+    if(r>=r0-0.5 && r<=r1+2){ const i=y*RES+x; if(grid[i] && !seen[i]){ seen[i]=1; stack.push(i); } }
+  }
+  if(stack.length===0 && hubR>boreR){ // fallback: only when a hub should exist and seed region found nothing
+    // Restrict search to within 2x hubR so we never seed a distant floating island
+    const maxFallbackR=r1*2;
+    let best=-1, bd=Infinity;
+    for(let i=0;i<grid.length;i++) if(grid[i]){
+      const x=i%RES, y=(i/RES)|0;
+      const r=Math.hypot(x-cx,y-cy);
+      if(r<=maxFallbackR){ const d=(x-cx)*(x-cx)+(y-cy)*(y-cy); if(d<bd){ bd=d; best=i; } }
+    }
+    if(best>=0){ seen[best]=1; stack.push(best); }
+  }
+  while(stack.length){
+    const i=stack.pop(), x=i%RES, y=(i/RES)|0;
+    if(x>0){ const j=i-1; if(grid[j]&&!seen[j]){ seen[j]=1; stack.push(j); } }
+    if(x<RES-1){ const j=i+1; if(grid[j]&&!seen[j]){ seen[j]=1; stack.push(j); } }
+    if(y>0){ const j=i-RES; if(grid[j]&&!seen[j]){ seen[j]=1; stack.push(j); } }
+    if(y<RES-1){ const j=i+RES; if(grid[j]&&!seen[j]){ seen[j]=1; stack.push(j); } }
+  }
+  let total=0, dropped=0;
+  for(let i=0;i<grid.length;i++){ if(grid[i]){ total++; if(!seen[i]){ grid[i]=0; dropped++; } } }
+  return {total, dropped};
+}
+
+// Live connectivity estimate for disc A at coarse resolution, used by the status readout.
+let connReport={drop:0, checked:false};
+function connCheck(){
+  if(!P.g.machine){ connReport={drop:0, checked:false}; return; }
+  const D=P.g.diameter;
+  // Minimum scale: 2.5mm tab must be >=6px, so scale>=2.4px/mm, so RES>=2.4*D/0.94
+  const RES=Math.min(1000, Math.max(600, Math.round(D*2.5)));
+  const scale=RES*0.94/D;
+  const tc=document.createElement('canvas'); tc.width=RES; tc.height=RES; const tx=tc.getContext('2d');
+  tx.save(); tx.translate(RES/2,RES/2); tx.scale(scale,scale);
+  renderPlate(tx, cacheMA, cacheTabsA, '#ffffff'); tx.restore();
+  const d=tx.getImageData(0,0,RES,RES).data;
+  const grid=new Uint8Array(RES*RES); for(let i=0;i<RES*RES;i++) grid[i]= d[i*4+3]>128?1:0;
+  const r=floodKeepHub(grid, RES, scale, P.g.bore/2, P.g.hubSolid);
+  connReport={drop: r.total? r.dropped/r.total : 0, checked:true};
+}
+
+// Build the exact keep/drop contours single-piece export would produce, for the preview.
+function previewContours(side){
+  const D=P.g.diameter, RES=Math.max(760,Math.min(1500,Math.round(D*3.5))), scale=RES*0.94/D;
+  const tc=document.createElement('canvas'); tc.width=RES; tc.height=RES; const tx=tc.getContext('2d');
+  tx.save(); tx.translate(RES/2,RES/2); tx.scale(scale,scale);
+  renderPlate(tx,(side==='A')?cacheMA:cacheMB,(side==='A')?cacheTabsA:cacheTabsB,'#ffffff'); tx.restore();
+  const data=tx.getImageData(0,0,RES,RES).data;
+  const g0=new Uint8Array(RES*RES); for(let i=0;i<RES*RES;i++) g0[i]= data[i*4+3]>128?1:0;
+  const gk=g0.slice(); floodKeepHub(gk,RES,scale,P.g.bore/2,P.g.hubSolid);
+  const gd=new Uint8Array(RES*RES); for(let i=0;i<RES*RES;i++) gd[i]= (g0[i]&&!gk[i])?1:0;
+  const eps=0.1*scale;
+  const toMM=(l)=>{ l=rdp(l,eps); if(l.length<4) return null; const m=l.map(v=>[(v[0]-RES/2)/scale,(v[1]-RES/2)/scale]); const a=m[0],z=m[m.length-1]; if(Math.hypot(a[0]-z[0],a[1]-z[1])>1e-4) m.push([a[0],a[1]]); return m; };
+  const keep=[], drop=[];
+  for(let l of traceBinary(gk,RES,RES)){ const m=toMM(l); if(m) keep.push(m); }
+  for(let l of traceBinary(gd,RES,RES)){ const m=toMM(l); if(m) drop.push(m); }
+  return {keep, drop};
+}
+function buildDropPreview(){ cachePrevA=previewContours('A'); cachePrevB=previewContours('B'); }
+
+// Fill contours individually so nested keep regions do not cancel each other under evenodd.
+// Each keep blob has exactly one CW outer boundary; filling it alone is unambiguous.
+// Slot holes are not in the keep set so there are no inner CCW boundaries to worry about.
+function fillContoursEO(contours,color){
+  if(!contours||!contours.length) return;
+  ctx.fillStyle=color;
+  for(const c of contours){
+    if(!c||c.length<2) continue;
+    ctx.beginPath();
+    ctx.moveTo(c[0][0],c[0][1]);
+    for(let i=1;i<c.length;i++) ctx.lineTo(c[i][0],c[i][1]);
+    ctx.closePath();
+    ctx.fill();
+  }
+}
+// Static flat-part diagnostic: the body that survives in its disc colour, the doomed islands in red.
+function drawDropPreview(cx,cy,scale){
+  ctx.save(); ctx.translate(cx,cy); ctx.scale(scale,scale);
+  if(P.g.showA && cachePrevA) fillContoursEO(cachePrevA.keep, hexA(P.g.colA,0.5));
+  if(P.g.showB && cachePrevB) fillContoursEO(cachePrevB.keep, hexA(P.g.colB,0.4));
+  if(P.g.showA && cachePrevA) fillContoursEO(cachePrevA.drop, 'rgba(214,52,42,0.9)');
+  if(P.g.showB && cachePrevB) fillContoursEO(cachePrevB.drop, 'rgba(214,52,42,0.72)');
+  ctx.restore();
+}
+
+// One-tap safe setup for laser-cut 3mm acrylic fretwork mounted on the centre hub only.
+function applyFretworkSetup(){
+  const g=P.g;
+  g.machine=true; g.mfgView=true; g.role='rib'; g.invert=false; g.onePiece=true;
+  g.material='acrylic'; g.kerf=0.15; g.minWeb=1.5; g.featW=Math.max(1.8,g.featW);
+  g.hubSolid=Math.max(14,g.hubSolid); if(g.bore<6) g.bore=8;
+  g.tabHub=true; g.tabRing=true; g.tabRim=false;
+  if(g.tabs<4) g.tabs=4; if(g.tabW<2.5) g.tabW=2.5;
+  g.rimOuter=false; g.rimInner=false; g.rimMid=0;
+  dirty=true; rebuild(); refreshVisibility(); refreshControlValues();
+  flash('Acrylic fretwork setup applied');
+}
+
+function plateContours(side){
+  if(dirty) rebuild();
+  const D=P.g.diameter, RES=Math.max(900, Math.min(2200, Math.round(D*5)));
+  const tc=document.createElement('canvas'); tc.width=RES; tc.height=RES; const tx=tc.getContext('2d');
+  const scale=RES*0.94/D;
+  tx.clearRect(0,0,RES,RES);
+  tx.save(); tx.translate(RES/2,RES/2); tx.scale(scale,scale);
+  renderPlate(tx,(side==='A')?cacheMA:cacheMB,(side==='A')?cacheTabsA:cacheTabsB,'#ffffff'); tx.restore();
+  const data=tx.getImageData(0,0,RES,RES).data;
+  const grid=new Uint8Array(RES*RES); for(let i=0;i<RES*RES;i++) grid[i]= data[i*4+3]>128?1:0;
+  if(P.g.onePiece) floodKeepHub(grid, RES, scale, P.g.bore/2, P.g.hubSolid);
+  const eps=0.08*scale, out=[];
+  for(let l of traceBinary(grid,RES,RES)){ l=rdp(l,eps); if(l.length<4) continue;
+    const m=l.map(v=>[ (v[0]-RES/2)/scale, (v[1]-RES/2)/scale ]);
+    const a=m[0], z=m[m.length-1]; if(Math.hypot(a[0]-z[0],a[1]-z[1])>1e-4) m.push([a[0],a[1]]); // guarantee closed
+    out.push(m); }
+  return out;
+}
+
+function downloadFile(text, name, mime){
+  const blob=new Blob([text],{type:mime||'text/plain'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+}
+function downloadText(text, name){ downloadFile(text, name, 'image/svg+xml'); }
+
+// ---------- DXF export (AC1015, mm, LWPOLYLINE + CIRCLE) ----------
+// CAM convention: pattern line art on layer PATTERN (engrave or cut your choice),
+// outer boundary and centre bore on layer CUT.
+function dxfHead(){ return '0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n4\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n'; }
+function dxfTail(){ return '0\nENDSEC\n0\nEOF\n'; }
+function dxfPoly(p, layer, off){
+  // map disc-frame (y down) to standard DXF (y up), centred at off
+  const closed = (p.length>2 && Math.hypot(p[0][0]-p[p.length-1][0], p[0][1]-p[p.length-1][1])<0.02);
+  const n = closed ? p.length-1 : p.length;
+  let s='0\nLWPOLYLINE\n8\n'+layer+'\n90\n'+n+'\n70\n'+(closed?1:0)+'\n';
+  for(let i=0;i<n;i++){ s+='10\n'+(p[i][0]+off).toFixed(3)+'\n20\n'+(off-p[i][1]).toFixed(3)+'\n'; }
+  return s;
+}
+function dxfCircle(cx,cy,r,layer){ return '0\nCIRCLE\n8\n'+layer+'\n10\n'+cx.toFixed(3)+'\n20\n'+cy.toFixed(3)+'\n40\n'+r.toFixed(3)+'\n'; }
+function discDXF(side){
+  if(dirty) rebuild();
+  const D=P.g.diameter, off=D/2;
+  const needMirror=(side==='B'&&P.g.mirrorB);
+  let s=dxfHead();
+  if(P.g.machine){
+    let loops=plateContours(side);
+    if(needMirror) loops=mirrorPolys(loops,P.g.mirrorAxis);
+    for(const lp of loops){ if(lp.length>2) s+=dxfPoly(lp,'CUT',off); }
+  } else {
+    const rawPolys=(side==='A')?cacheA:cacheB;
+    const polys=needMirror?mirrorPolys(rawPolys,P.g.mirrorAxis):rawPolys;
+    for(const p of polys){ if(p.length>1) s+=dxfPoly(p,'PATTERN',off); }
+    s+=dxfCircle(off,off,D/2,'CUT');
+    if(P.g.bore>0) s+=dxfCircle(off,off,P.g.bore/2,'CUT');
+    if(P.g.hub>0) s+=dxfCircle(off,off,P.g.hub/2,'GUIDE');
+  }
+  s+=dxfTail();
+  return s;
+}
+
+// ---------- wire top bar ----------
+document.getElementById('playBtn').onclick=function(){ playing=!playing; this.textContent=playing?'Pause':'Play'; };
+document.getElementById('preset').onchange=function(){ applyPreset(this.value); };
+document.getElementById('randBtn').onclick=randomize;
+document.getElementById('undoRand').onclick=()=>{ if(randUndo){ applySetup(randUndo); randUndo=null; flash('Randomize undone'); } else flash('Nothing to undo'); };
+document.getElementById('seed').onchange=()=>{};
+// export buttons now live inside the (dynamically built) Export panel, so wire them after build()
+function wireExports(){
+  document.getElementById('expA').onclick=()=>{ if(dirty)rebuild(); downloadText(discSVG('A'),'coaxial_discA.svg'); };
+  document.getElementById('expAd').onclick=()=>{ downloadFile(discDXF('A'),'coaxial_discA.dxf','application/dxf'); };
+  document.getElementById('expB').onclick=()=>{ if(dirty)rebuild(); downloadText(discSVG('B'),'coaxial_discB.svg'); };
+  document.getElementById('expBd').onclick=()=>{ downloadFile(discDXF('B'),'coaxial_discB.dxf','application/dxf'); };
+  document.getElementById('expC').onclick=()=>{ if(dirty)rebuild(); downloadText(compositeSVG(),'coaxial_composite.svg'); };
+  document.getElementById('expP').onclick=()=>{ cv.toBlob(b=>{const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='coaxial_interference.png'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1500);}); };
+}
+
+// ---------- setup save / load / reset (parameter setup import) ----------
+function flash(msg){ const st=document.getElementById('status'); if(!st) return; st.textContent=msg; flashT=Date.now()+1400; setTimeout(updateStatus,1500); }
+function applySetup(o){
+  if(o.g) Object.assign(P.g,o.g); if(o.A) Object.assign(P.A,o.A); if(o.B) Object.assign(P.B,o.B);
+  dirty=true; refreshControlValues(); refreshVisibility(); updateStatus();
+}
+document.getElementById('saveSetup').onclick=()=>{ downloadFile(JSON.stringify({app:'coaxial-interference',v:1,g:P.g,A:P.A,B:P.B},null,2),'coaxial_setup.json','application/json'); flash('Setup saved to coaxial_setup.json'); };
+document.getElementById('loadSetup').onclick=()=>document.getElementById('setupFile').click();
+document.getElementById('setupFile').onchange=function(){
+  const f=this.files&&this.files[0]; if(!f){return;}
+  const r=new FileReader();
+  r.onload=()=>{ try{ applySetup(JSON.parse(r.result)); flash('Setup loaded from '+f.name); }catch(e){ flash('Could not read that setup file'); } };
+  r.readAsText(f); this.value='';
+};
+document.getElementById('resetSetup').onclick=()=>{ applySetup(JSON.parse(JSON.stringify(DEFAULTS))); flash('Reset to defaults'); };
+
+// ---------- init ----------
+window.addEventListener('resize',()=>{ sizeCanvas(); updateStatus(); });
+build();
+wireExports();
+sizeCanvas();
+document.getElementById('preset').value='bloom';
+applyPreset('bloom');
+rebuild();
+requestAnimationFrame((t)=>{ lastT=t; loop(t); });
+tutOpen();
+
+// ---------- mobile: dock the Setup group into the sidebar to free header height ----------
+(function(){
+  const mq=window.matchMedia('(max-width:820px)');
+  const header=document.querySelector('header');
+  const sidebar=document.getElementById('sidebar');
+  const setupGroup=document.getElementById('saveSetup').closest('.topgroup');
+  const helpBtn=document.getElementById('helpBtn');
+  const dock=document.createElement('div'); dock.className='setup-dock';
+  function fade(){
+    if(!mq.matches){ header.classList.remove('hxL','hxR','hxLR'); return; }
+    const max=header.scrollWidth-header.clientWidth;
+    const l=header.scrollLeft>2, r=header.scrollLeft<max-2 && max>4;
+    header.classList.remove('hxL','hxR','hxLR');
+    if(l&&r) header.classList.add('hxLR'); else if(r) header.classList.add('hxR'); else if(l) header.classList.add('hxL');
+  }
+  function place(){
+    if(mq.matches){
+      if(setupGroup.parentNode!==dock) dock.appendChild(setupGroup);
+      if(dock.parentNode!==sidebar) sidebar.insertBefore(dock, sidebar.firstChild);
+    } else {
+      if(setupGroup.parentNode!==header) header.insertBefore(setupGroup, helpBtn);
+      if(dock.parentNode) dock.parentNode.removeChild(dock);
+    }
+    if(typeof sizeCanvas==='function') sizeCanvas();
+    fade();
+  }
+  place();
+  header.addEventListener('scroll',fade,{passive:true});
+  window.addEventListener('resize',fade);
+  if(mq.addEventListener) mq.addEventListener('change',place); else if(mq.addListener) mq.addListener(place);
+})();
+</script>
+</body>
+</html>
